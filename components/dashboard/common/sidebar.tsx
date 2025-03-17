@@ -33,8 +33,8 @@ export default function Sidebar() {
           className={`w-full justify-start gap-3 font-medium relative pl-9 border-l-4 rounded-none ${isActive('/dashboard') ? dashboardBorderColor : 'border-transparent'}`}
           asChild
         >
-          <Link href="/dashboard">
-            <LayoutDashboard className="h-5 w-5 absolute left-2" />
+          <Link href="/dashboard" >
+            <LayoutDashboard className="h-5 w-5 -ml-4" />
             <span>Dashboard</span>
           </Link>
         </Button>
@@ -44,7 +44,7 @@ export default function Sidebar() {
           asChild
         >
           <Link href="/dashboard/students">
-            <Users className="h-5 w-5 absolute left-2" />
+            <Users className="h-5 w-5 -ml-4" />
             <span>Manage Students</span>
           </Link>
         </Button>
@@ -54,7 +54,7 @@ export default function Sidebar() {
           asChild
         >
           <Link href="/dashboard/networks">
-            <Network className="h-5 w-5 absolute left-2" />
+            <Network className="h-5 w-5 -ml-4" />
             <span>Manage Networks</span>
           </Link>
         </Button>
@@ -64,7 +64,7 @@ export default function Sidebar() {
           asChild
         >
           <Link href="/dashboard/payments">
-            <CreditCard className="h-5 w-5 absolute left-2" />
+            <CreditCard className="h-5 w-5 -ml-4" />
             <span>Payments</span>
           </Link>
         </Button>
