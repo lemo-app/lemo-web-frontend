@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { ArrowDown, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Pagination } from "../common/pagination"
 
 const violations = [
   {
@@ -47,6 +49,10 @@ const violations = [
 ]
 
 export function ViolationsTable() {
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5
+  const totalPages = Math.ceil(violations.length / itemsPerPage)
+
   return (
     <Card className="shadow-none border-0">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -77,7 +83,7 @@ export function ViolationsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {violations.map((violation) => (
+            {violations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((violation) => (
               <TableRow key={violation.rank}>
                 <TableCell className="font-medium">{violation.rank}</TableCell>
                 <TableCell>
@@ -93,57 +99,17 @@ export function ViolationsTable() {
             ))}
           </TableBody>
         </Table>
-        
       </CardContent>
-
-      <CardFooter className="flex items-center justify-between mt-0 text-sm">
-          <div className="text-muted-foreground">Showing 1-5 from 15</div>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
-              <span className="sr-only">Previous page</span>
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 bg-primary text-primary-foreground">
-              1
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              2
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              3
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-              <span className="sr-only">Next page</span>
-            </Button>
-          </div>
-      </CardFooter>
+      <div className="px-6">
+        <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={violations.length}
+          />
+      </div>
+      
+     
     </Card>
   )
 }
