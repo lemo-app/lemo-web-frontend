@@ -58,7 +58,7 @@ export function StudentDashboard() {
     <div>
       <h1 className="text-2xl font-bold mb-4">Manage Students</h1>
 
-      <Tabs defaultValue="students" className="mb-6">
+      <Tabs defaultValue="students" className="bg-white py-4 rounded-md">
         <TabsList className="mb-4 border-b w-full justify-start rounded-none h-auto p-0 bg-transparent">
           <TabsTrigger
             value="students"
