@@ -57,7 +57,10 @@ export function StudentDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Manage Students</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Manage Students</h1>
+        <p className="text-muted-foreground">Manage student related all actions here</p>
+      </div>
 
       <Tabs defaultValue="students" className="bg-white py-4 rounded-md">
         <TabsList className="mb-4 border-b w-full justify-start rounded-none h-auto p-0 bg-transparent">
