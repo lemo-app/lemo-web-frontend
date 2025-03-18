@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Users, Network, CreditCard, LayoutDashboard } from "lucide-react";
+import { Users, Network, CreditCard, LayoutDashboard, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -66,6 +66,16 @@ export default function Sidebar() {
           <Link href="/dashboard/payments">
             <CreditCard className="h-5 w-5 -ml-4" />
             <span>Payments</span>
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          className={`w-full justify-start gap-3 text-gray-600 pl-9 relative border-l-4 rounded-none ${isActive('/dashboard/settings') ? dashboardBorderColor : 'border-transparent'}`}
+          asChild
+        >
+          <Link href="/dashboard/settings">
+            <Settings className="h-5 w-5 -ml-4" />
+            <span>School Settings</span>
           </Link>
         </Button>
       </nav>
