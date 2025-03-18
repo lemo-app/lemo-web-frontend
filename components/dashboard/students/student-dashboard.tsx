@@ -17,6 +17,7 @@ import { Pagination } from "../common/pagination"
 import { AttendanceTable } from "./attendance-table"
 import { AddStudentModal } from "./add-student-modal"
 import { WarningNoteModal } from "./warning-note-modal"
+import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
 
 export function StudentDashboard() {
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
@@ -160,7 +161,7 @@ export function StudentDashboard() {
                     </TableCell>
                     <TableCell className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={student.avatar} alt={student.name} />
+                        <AvatarImage src={avatarLogo.src} alt={student.name} />
                         <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <span>{student.name}</span>

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button"; // Adjust the import path as ne
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; // Adjust the import path as necessary
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"; // Adjust the import path as necessary
 import { Bell } from "lucide-react";
+import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
+
 
 const Header: React.FC = () => {
   return (
@@ -38,7 +40,7 @@ const Header: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 flex items-center gap-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                <AvatarImage src={avatarLogo.src} alt="User" />
                 <AvatarFallback>JH</AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm">

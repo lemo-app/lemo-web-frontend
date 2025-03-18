@@ -9,6 +9,8 @@ import { AddFacultyModal } from "@/components/dashboard/settings/add-faculty-mod
 import { useState } from "react";
 import SchoolDetails from "@/components/dashboard/settings/school-details";
 import QrCodes from "@/components/dashboard/settings/qr-codes";
+import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
+import Image from "next/image";
 
 interface FacultyMember {
   id: number;
@@ -115,13 +117,15 @@ const Settings = () => {
                     {facultyMembers.map((member) => (
                       <div
                         key={member.id}
-                        className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                        className="flex items-center justify-between p-1 hover:bg-gray-50 rounded-lg transition-colors"
                       >
                         <div className="flex items-center space-x-3">
-                          <img
-                            src={member.avatar}
+                          <Image
+                            width={40}
+                            height={40}
+                            src={avatarLogo.src}
                             alt={member.name}
-                            className="h-10 w-10 rounded-full"
+                            className="rounded-full"
                           />
                           <div>
                             <p className="text-sm font-medium text-gray-900">

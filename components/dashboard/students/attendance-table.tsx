@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { attendanceSummary } from "@/lib/data"
 import { Pagination } from "../common/pagination"
 import { WarningNoteModal } from "./warning-note-modal"
+import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
 
 export function AttendanceTable() {
   const [currentPage, setCurrentPage] = useState(1)
@@ -39,7 +40,7 @@ export function AttendanceTable() {
               <TableRow key={student.id}>
                 <TableCell className="flex items-center gap-2">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={student.avatar} alt={student.name} />
+                    <AvatarImage src={avatarLogo.src} alt={student.name} />
                     <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
