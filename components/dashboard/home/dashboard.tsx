@@ -22,7 +22,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Welcome Back Jay</h1>
-          <p className="text-muted-foreground">Lorem ipsum dolor si amet welcome back johny</p>
+          <p className="text-muted-foreground">Find all analytics of your necessary role here</p>
         </div>
         <Tabs defaultValue="all" className="w-auto" value={timeFilter} onValueChange={setTimeFilter}>
           <TabsList className="grid grid-cols-5 w-auto">
