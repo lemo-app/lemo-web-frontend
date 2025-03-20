@@ -1,12 +1,21 @@
+'use client'
+
 import React from "react";
 import { Button } from "@/components/ui/button"; // Adjust the import path as necessary
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; // Adjust the import path as necessary
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"; // Adjust the import path as necessary
 import { Bell } from "lucide-react";
 import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
-
+import { useRouter } from 'next/navigation';
 
 const Header: React.FC = () => {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; // Clear the token from cookies
+    router.push('/login');
+  };
+
   return (
     <header className="flex h-14 items-center justify-between bg-white px-6 sticky top-0 z-10">
       <div className="lg:hidden">
@@ -66,7 +75,7 @@ const Header: React.FC = () => {
           <DropdownMenuContent align="end">
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
