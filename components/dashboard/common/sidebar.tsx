@@ -78,6 +78,16 @@ export default function Sidebar() {
             <span>School Settings</span>
           </Link>
         </Button>
+        <Button
+          variant="ghost"
+          className={`w-full justify-start gap-3 text-gray-600 pl-9 relative border-l-4 rounded-none ${isActive('/dashboard/schools') ? dashboardBorderColor : 'border-transparent'}`}
+          asChild
+        >
+          <Link href="/dashboard/schools">
+            <Settings className="h-5 w-5 -ml-4" />
+            <span>Manage Schools</span>
+          </Link>
+        </Button>
       </nav>
     </div>
   );
