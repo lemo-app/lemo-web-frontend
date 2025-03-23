@@ -15,18 +15,19 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { Pagination } from "../common/pagination"
 import { AttendanceTable } from "./attendance-table"
-import { AddStudentModal } from "./add-student-modal"
 import { WarningNoteModal } from "./warning-note-modal"
 import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
+import HeaderWithButtonsLinks from "../common/header-with-buttons-links"
 
 export function StudentDashboard() {
-  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
   const [isWarningNoteModalOpen, setIsWarningNoteModalOpen] = useState(false)
   const [selectedStudentForWarning, setSelectedStudentForWarning] = useState("")
   const [selectedStudents, setSelectedStudents] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [date, setDate] = useState<Date | undefined>(undefined)
+  const [value, setValue] = useState("students")
+
 
   const toggleSelectAll = () => {
     if (selectedStudents.length === filteredStudents.length) {
@@ -58,29 +59,51 @@ export function StudentDashboard() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Manage Students</h1>
-        <p className="text-muted-foreground">Manage student related all actions here</p>
+        <HeaderWithButtonsLinks
+          title={'Manage Students'}
+          modalTitle={'Add Student'}
+        />
       </div>
 
-      <Tabs defaultValue="students" className="bg-white py-4 rounded-md">
-        <TabsList className="mb-4 border-b w-full justify-start rounded-none h-auto p-0 bg-transparent">
+      <Tabs value={value} onValueChange={setValue} className="py-4 rounded-md -mt-10 ">
+      <div className="bg-gray-50 p-2 rounded-lg">
+        <TabsList className="w-full font-medium justify-start rounded-none h-auto p-0 bg-transparent space-x-4">
           <TabsTrigger
             value="students"
-            className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary px-4 py-2 h-auto bg-transparent"
+            className="rounded-none data-[state=active]:text-primary data-[state=active]:font-medium data-[state=inactive]:text-gray-500 flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
           >
             Students
+            <div
+              className="w-4 h-4 rounded-full border border-current data-[state=active]:bg-primary data-[state=inactive]:bg-transparent"
+              data-state={value === "students" ? "active" : "inactive"}
+            />
           </TabsTrigger>
           <TabsTrigger
             value="attendance"
-            className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary px-4 py-2 h-auto bg-transparent"
+            className="rounded-none data-[state=active]:text-primary data-[state=active]:font-medium data-[state=inactive]:text-gray-500 flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
           >
             Attendance
+            <div
+              className="w-4 h-4 rounded-full border border-current data-[state=active]:bg-primary data-[state=inactive]:bg-transparent"
+              data-state={value === "attendance" ? "active" : "inactive"}
+            />
           </TabsTrigger>
+          {/* <TabsTrigger
+            value="incidents"
+            className="rounded-none data-[state=active]:text-primary data-[state=active]:font-medium data-[state=inactive]:text-gray-500 flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
+          >
+            Incidents
+            <div
+              className="w-4 h-4 rounded-full border border-current data-[state=active]:bg-primary data-[state=inactive]:bg-transparent"
+              data-state={value === "incidents" ? "active" : "inactive"}
+            />
+          </TabsTrigger> */}
         </TabsList>
+      </div>
 
-        <TabsContent value="students" className="mt-0">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-            <div className="relative w-full md:w-64">
+        <TabsContent value="students" className=" mt-8" >
+          <div className=" flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+            <div className="relative w-full md:w-64 bg-white">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search by name/ID..."
@@ -90,7 +113,7 @@ export function StudentDashboard() {
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+            <div className="flex items-center gap-2 w-full md:w-auto flex-wrap bg-white">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
@@ -122,19 +145,10 @@ export function StudentDashboard() {
                 <Filter className="h-4 w-4" />
                 Filters
               </Button>
-
-              <Button variant="outline" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Export
-              </Button>
-
-              <Button onClick={() => setIsAddStudentModalOpen(true)} className="flex items-center gap-2">
-                <span>+</span> Add Students
-              </Button>
             </div>
           </div>
 
-          <div className="border rounded-md overflow-hidden">
+          <div className="bg-white border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -223,7 +237,7 @@ export function StudentDashboard() {
           />
         </TabsContent>
 
-        <TabsContent value="attendance" className="mt-0">
+        <TabsContent value="attendance" className="mt-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -295,7 +309,6 @@ export function StudentDashboard() {
 
       </Tabs>
 
-      <AddStudentModal isOpen={isAddStudentModalOpen} onClose={() => setIsAddStudentModalOpen(false)} />
 
       <WarningNoteModal
         isOpen={isWarningNoteModalOpen}

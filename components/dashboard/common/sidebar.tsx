@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Users, Network, CreditCard, LayoutDashboard, Settings } from "lucide-react";
+import { Users, Network, CreditCard, LayoutDashboard, Settings, BriefcaseBusiness, GraduationCap, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -44,7 +44,7 @@ export default function Sidebar() {
           asChild
         >
           <Link href="/dashboard/students">
-            <Users className="h-5 w-5 -ml-4" />
+            <GraduationCap className="h-5 w-5 -ml-4" />
             <span>Manage Students</span>
           </Link>
         </Button>
@@ -84,8 +84,18 @@ export default function Sidebar() {
           asChild
         >
           <Link href="/dashboard/schools">
-            <Settings className="h-5 w-5 -ml-4" />
+            <School className="h-5 w-5 -ml-4" />
             <span>Manage Schools</span>
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          className={`w-full justify-start gap-3 text-gray-600 pl-9 relative border-l-4 rounded-none ${isActive('/dashboard/staff') ? dashboardBorderColor : 'border-transparent'}`}
+          asChild
+        >
+          <Link href="/dashboard/staff">
+            <BriefcaseBusiness className="h-5 w-5 -ml-4" />
+            <span>Manage Platform Staff</span>
           </Link>
         </Button>
       </nav>
