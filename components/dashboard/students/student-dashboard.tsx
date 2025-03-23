@@ -65,29 +65,27 @@ export function StudentDashboard() {
         />
       </div>
 
-      <Tabs value={value} onValueChange={setValue} className="py-4 rounded-md -mt-10 ">
-      <div className="bg-gray-50 p-2 rounded-lg">
+      <Tabs value={value} onValueChange={setValue} className="py-4 rounded-md -mt-12">
+      <div className="bg-gray-50 py-2 rounded-lg">
         <TabsList className="w-full font-medium justify-start rounded-none h-auto p-0 bg-transparent space-x-4">
-          <TabsTrigger
+        <TabsTrigger
             value="students"
-            className="rounded-none data-[state=active]:text-primary data-[state=active]:font-medium data-[state=inactive]:text-gray-500 flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
+            className="rounded-none text-gray-500 data-[state=active]:text-blue-500 data-[state=active]:font-medium flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
           >
             Students
-            <div
-              className="w-4 h-4 rounded-full border border-current data-[state=active]:bg-primary data-[state=inactive]:bg-transparent"
-              data-state={value === "students" ? "active" : "inactive"}
-            />
           </TabsTrigger>
+          <div className="w-3 h-3 rounded-full border bg-gray-300" />
           <TabsTrigger
             value="attendance"
-            className="rounded-none data-[state=active]:text-primary data-[state=active]:font-medium data-[state=inactive]:text-gray-500 flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
+            className="rounded-none text-gray-500 data-[state=active]:text-blue-500 data-[state=active]:font-medium flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
           >
             Attendance
-            <div
-              className="w-4 h-4 rounded-full border border-current data-[state=active]:bg-primary data-[state=inactive]:bg-transparent"
-              data-state={value === "attendance" ? "active" : "inactive"}
-            />
           </TabsTrigger>
+          {/* <div
+              className="w-4 h-4 rounded-full border border-current data-[state=active]:bg-gray-300 data-[state=inactive]:bg-transparent"
+              data-state={value === "attendance" ? "active" : "inactive"}
+            /> */}
+
           {/* <TabsTrigger
             value="incidents"
             className="rounded-none data-[state=active]:text-primary data-[state=active]:font-medium data-[state=inactive]:text-gray-500 flex items-center gap-2 px-0 py-2 data-[state=active]:border-none data-[state=active]:shadow-none"
@@ -101,7 +99,7 @@ export function StudentDashboard() {
         </TabsList>
       </div>
 
-        <TabsContent value="students" className=" mt-8" >
+        <TabsContent value="students" className="mt-4" >
           <div className=" flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
             <div className="relative w-full md:w-64 bg-white">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -237,7 +235,7 @@ export function StudentDashboard() {
           />
         </TabsContent>
 
-        <TabsContent value="attendance" className="mt-8">
+        <TabsContent value="attendance" className="mt-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
