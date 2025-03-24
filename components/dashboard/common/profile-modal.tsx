@@ -44,9 +44,23 @@ export function UpdateUserModal({
   const [isChanged, setIsChanged] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (e.g., max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error('File is too large. Maximum size is 5MB.');
+        return;
+      }
+  
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please upload JPEG, PNG, or GIF.');
+        return;
+      }
+  
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = () => {
@@ -184,7 +198,7 @@ export function UpdateUserModal({
               <Label className="text-base font-medium">Account Type</Label>
               <Input
                 value={
-                  user?.type?.charAt(0)?.toUpperCase() + user?.type?.replace('_', ' ')?.toUpperCase()?.slice(1)
+                  user?.type?.charAt(0)?.toUpperCase() + user?.type?.toUpperCase()?.slice(1)
                 }
                 className="h-12 mt-2 text-base bg-gray-50"
                 disabled

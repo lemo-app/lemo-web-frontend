@@ -1,12 +1,13 @@
 import axios from 'axios';
 import Cookies from 'js-cookie'; // Import js-cookie
 import FormData from 'form-data';
+import { toast } from 'sonner';
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:3001', // Replace with your API base URL
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // headers: {
+  //   'Content-Type': 'application/json',
+  // },
 });
 
 apiClient.interceptors.request.use(
@@ -71,13 +72,25 @@ export const uploadFile = async (file: File) => {
   try {
     const response = await apiClient.post('/files/upload', formData, {
       headers: {
-        ...formData.getHeaders(),
-      },
-      maxBodyLength: Infinity,
+        'Content-Type': 'multipart/form-data'
+      }
     });
     return response.data.file_url;
   } catch (error) {
     console.error('File upload error:', error);
+    if (axios.isAxiosError(error)) {
+      // More specific error handling
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        toast.error(`Upload failed: ${error.response.data.message}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        toast.error('No response received from server');
+      } else {
+        // Something happened in setting up the request
+        toast.error('Error setting up file upload');
+      }
+    }
     throw error;
   }
 };

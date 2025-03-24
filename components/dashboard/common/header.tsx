@@ -58,8 +58,8 @@ const Header: React.FC = () => {
               }
 
               <div className="flex flex-col items-start text-xs">
-                <span className="font-medium">{userData.full_name ?? 'Anonymous'}</span>
-                <span className="text-xs text-muted-foreground">{userData.type.replace('_', ' ').toLocaleUpperCase()}</span>
+                <span className="font-medium">{userData?.full_name ?? 'Anonymous'}</span>
+                <span className="text-xs text-muted-foreground">{userData?.type?.replace('_', ' ').toLocaleUpperCase()}</span>
               </div>
               <ChevronsUpDown className="h-4 w-4" />
             </div>
