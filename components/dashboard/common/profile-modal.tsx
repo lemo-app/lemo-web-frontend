@@ -126,7 +126,7 @@ export function UpdateUserModal({ isOpen, onClose, user }: UpdateUserModalProps)
           <div className="space-y-4">
             <div>
               <Label htmlFor="name" className="text-base font-medium">
-                Full Name
+                Full Name*
               </Label>
               <Input
                 id="name"

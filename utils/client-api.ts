@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Cookies from 'js-cookie'; // Import js-cookie
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:3001', // Replace with your API base URL
@@ -7,19 +8,18 @@ const apiClient = axios.create({
   },
 });
 
-// Remove the interceptor that retrieves the token from localStorage
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token'); // Retrieve token from localStorage
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get('token'); // Retrieve token from cookies
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export const signup = async (email: string, type: string) => {
   try {

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"; // Adjust the import path as necessary
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; // Adjust the import path as necessary
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"; // Adjust the import path as necessary
-import { Bell, ChevronsUpDown, Menu } from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut, Menu, ShieldUser, User } from "lucide-react";
 import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
 import { useRouter } from 'next/navigation';
 import { useUserStore } from "@/utils/store/user-store";
@@ -48,10 +48,15 @@ const Header: React.FC = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 flex items-center gap-2 border-gray-100 border-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={ userData.avatar ?? avatarLogo.src} alt="User image" />
-                <AvatarFallback>{userData.name ?? 'A'}</AvatarFallback>
-              </Avatar>
+              {
+                userData.avatar ?
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={ userData.avatar ?? avatarLogo.src} alt="User image" />
+                  <AvatarFallback>{userData.name ?? 'A'}</AvatarFallback>
+                </Avatar> : 
+                <User className="size-10" />
+              }
+
               <div className="flex flex-col items-start text-sm">
                 <span className="font-medium">{userData.name ?? 'Anonymous'}</span>
                 <span className="text-xs text-muted-foreground">{userData.type}</span>
@@ -61,12 +66,19 @@ const Header: React.FC = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem 
+            className="cursor-pointer"
               onClick={() => setIsModalOpen(true)}
             >
+              <User className="h-5 w-5 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
