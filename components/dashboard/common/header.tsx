@@ -47,22 +47,22 @@ const Header: React.FC = () => {
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 flex items-center gap-2 border-gray-100 border-2">
+            <div className="relative h-10 p-3 rounded-md flex items-center cursor-pointer gap-2 border-gray-100 border-2">
               {
-                userData.avatar ?
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={ userData.avatar ?? avatarLogo.src} alt="User image" />
-                  <AvatarFallback>{userData.name ?? 'A'}</AvatarFallback>
+                userData.avatar_url ?
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={ userData.avatar_url ?? avatarLogo.src} alt="User image" />
+                  <AvatarFallback>{userData.full_name ?? 'U'}</AvatarFallback>
                 </Avatar> : 
-                <User className="size-10" />
+                <User className="size-5" />
               }
 
-              <div className="flex flex-col items-start text-sm">
-                <span className="font-medium">{userData.name ?? 'Anonymous'}</span>
-                <span className="text-xs text-muted-foreground">{userData.type}</span>
+              <div className="flex flex-col items-start text-xs">
+                <span className="font-medium">{userData.full_name ?? 'Anonymous'}</span>
+                <span className="text-xs text-muted-foreground">{userData.type.replace('_', ' ').toLocaleUpperCase()}</span>
               </div>
               <ChevronsUpDown className="h-4 w-4" />
-            </Button>
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem 

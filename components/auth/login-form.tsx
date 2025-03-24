@@ -39,7 +39,7 @@ export function LoginForm({
       // console.log("Login successful:", response);
       document.cookie = `token=${response.token}; path=/`; // Store token in cookies
       setUser(response); // Update the user store with the response data
-      if(!response.name){
+      if(!response.full_name){
         setIsProfileCompleted(false);
       }
 
