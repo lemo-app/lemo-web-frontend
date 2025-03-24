@@ -5,6 +5,7 @@ import { AddSchoolModal } from "../schools/add-school-modal";
 import { toast } from "sonner";
 import { AddStudentModal } from "../students/add-student-modal";
 import { AddStaffModal } from "../staff/add-staff-modal";
+import { InviteAdminModal } from "../admins/invite-admin-modal";
 
 interface HeaderWithButtonsLinksProps {
   title: string;
@@ -18,6 +19,7 @@ const HeaderWithButtonsLinks = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
 
   // Add school to the list
   const handleAddSchool = () => {
@@ -41,7 +43,9 @@ const HeaderWithButtonsLinks = ({
               setIsAddStudentModalOpen(true);
             } else if(modalTitle === "Add Staff") {
               setIsAddStaffModalOpen(true);
-            } else {
+            } else if(modalTitle === "Add Admin") {
+              setIsAddAdminModalOpen(true);
+            }else {
               setIsAddModalOpen(!isAddModalOpen);
             }
           }}
@@ -61,10 +65,12 @@ const HeaderWithButtonsLinks = ({
         onClose={() => setIsAddStudentModalOpen(false)}
       />
 
-      <AddStaffModal
-        isOpen={isAddStaffModalOpen}
-        onClose={() => setIsAddStaffModalOpen(false)}
+      <InviteAdminModal
+        isOpen={isAddAdminModalOpen}
+        onClose={() => setIsAddAdminModalOpen(false)}
       />
+
+
       
     </div>
   );

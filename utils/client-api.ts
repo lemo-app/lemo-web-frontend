@@ -21,11 +21,10 @@ const apiClient = axios.create({
 //   }
 // );
 
-export const signup = async (email: string, password: string, type: string) => {
+export const signup = async (email: string, type: string) => {
   try {
     const response = await apiClient.post('/auth/signup', {
       email,
-      password,
       type,
     });
     return response.data;
@@ -45,6 +44,21 @@ export const login = async (email: string, password: string) => {
     return response.data;
   } catch (error) {
     console.error('Login error:', error);
+    throw error;
+  }
+};
+
+export const verifyEmail = async (email: string, tempPassword: string, newPassword: string, newPasswordConfirm: string) => {
+  try {
+    const response = await apiClient.post('/verify-email', {
+      email,
+      temp_password: tempPassword,
+      new_password: newPassword,
+      new_password_confirm: newPasswordConfirm,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Verify email error:', error);
     throw error;
   }
 };

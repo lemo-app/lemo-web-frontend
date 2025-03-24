@@ -22,15 +22,15 @@ export function RegisterForm({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    try {
-      const response = await signup(email, password, "super-admin");
-      // console.log("Signup successful:", response);
-      toast.success('User created successfully. Verification email sent.');
-      router.push('/dashboard');
-    } catch (error: AxiosError | any) {
-      console.error("Signup failed:", error);
-      toast.error(error.response.data ?? 'Something went wrong. Please try again.');
-    }
+    // try {
+    //   const response = await signup(email, password, "super-admin");
+    //   // console.log("Signup successful:", response);
+    //   toast.success('User created successfully. Verification email sent.');
+    //   router.push('/dashboard');
+    // } catch (error: AxiosError | any) {
+    //   console.error("Signup failed:", error);
+    //   toast.error(error.response.data ?? 'Something went wrong. Please try again.');
+    // }
   };
 
   return (

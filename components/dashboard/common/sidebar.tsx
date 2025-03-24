@@ -98,6 +98,16 @@ export default function Sidebar() {
             <span>Manage Platform Staff</span>
           </Link>
         </Button>
+        <Button
+          variant="ghost"
+          className={`w-full justify-start gap-3 text-gray-600 pl-9 relative border-l-4 rounded-none ${isActive('/dashboard/admins') ? dashboardBorderColor : 'border-transparent'}`}
+          asChild
+        >
+          <Link href="/dashboard/admins">
+            <Users className="h-5 w-5 -ml-4" />
+            <span>Manage Admins</span>
+          </Link>
+        </Button>
       </nav>
     </div>
   );
