@@ -184,7 +184,7 @@ export function UpdateUserModal({
               <Label className="text-base font-medium">Account Type</Label>
               <Input
                 value={
-                  user?.type?.charAt(0)?.toUpperCase() + user?.type?.slice(1)
+                  user?.type?.charAt(0)?.toUpperCase() + user?.type?.replace('_', ' ')?.toUpperCase()?.slice(1)
                 }
                 className="h-12 mt-2 text-base bg-gray-50"
                 disabled
