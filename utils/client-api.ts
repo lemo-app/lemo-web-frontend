@@ -109,6 +109,16 @@ export const updateUserProfile = async (fullName?: string, avatarUrl?: string) =
   }
 };
 
+export const createSchool = async (school: { school_name: string; address: string; contact_number: string; description: string; logo_url?: string }) => {
+  try {
+    const response = await apiClient.post('/schools/create', school);
+    return response.data;
+  } catch (error) {
+    console.error('Create school error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 

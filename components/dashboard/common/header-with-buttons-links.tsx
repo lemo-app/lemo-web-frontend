@@ -21,10 +21,6 @@ const HeaderWithButtonsLinks = ({
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
 
-  // Add school to the list
-  const handleAddSchool = () => {
-    toast.success("School added successfully");
-  };
 
   return (
     <div className="flex items-center justify-between">
@@ -58,7 +54,6 @@ const HeaderWithButtonsLinks = ({
       <AddSchoolModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddSchool={handleAddSchool}
       />
       <AddStudentModal
         isOpen={isAddStudentModalOpen}
@@ -70,7 +65,10 @@ const HeaderWithButtonsLinks = ({
         onClose={() => setIsAddAdminModalOpen(false)}
       />
 
-
+      <AddStaffModal
+        isOpen={isAddStaffModalOpen}
+        onClose={() => setIsAddStaffModalOpen(false)}
+      />
       
     </div>
   );

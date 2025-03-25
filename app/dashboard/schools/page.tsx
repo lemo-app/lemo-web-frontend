@@ -7,7 +7,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ChevronDown, Download, Edit, Filter, Lock, MessageSquare, Plus, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { AddSchoolModal } from "@/components/dashboard/schools/add-school-modal"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import HeaderWithButtonsLinks from "@/components/dashboard/common/header-with-buttons-links"
 
