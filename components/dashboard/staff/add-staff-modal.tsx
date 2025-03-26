@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, Loader2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { createStaffMember, connectStaffToSchool } from "@/utils/client-api"
+import { connectStaffToSchool, signup } from "@/utils/client-api"
 import { toast } from "sonner"
 
 // Static school ID as requested
@@ -61,11 +61,11 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
     setError("")
     
     try {
-      console.log("Submitting staff with job title:", staffRole);
+      // console.log("Submitting staff with job title:", staffRole);
       
       // Use the specialized createStaffMember function that handles both signup and job title update
-      const response = await createStaffMember(staffEmail, staffType, staffName, staffRole);
-      console.log("Staff creation response:", response);
+      await signup(staffEmail, staffType, staffName, staffRole);
+      // console.log("Staff creation response:", response);
       
       // Connect the staff to the school
       await connectStaffToSchool(staffEmail, SCHOOL_ID)

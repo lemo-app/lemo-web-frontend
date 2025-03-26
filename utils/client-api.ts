@@ -195,45 +195,6 @@ export const storeSchoolQRCode = async (schoolId: string, qrCodeUrl: string) => 
   }
 };
 
-// Dedicated function for staff creation that handles both signup and job title update
-export const createStaffMember = async (email: string, type: string, fullName?: string, jobTitle?: string) => {
-  try {
-    // 1. Create the user account first
-    const signupResponse = await signup(email, type, fullName);
-    console.log('Signup completed, now handling job title');
-    
-    // 2. If job title was provided, update the user profile
-    if (jobTitle) {
-      // We can try two approaches:
-      
-      // Approach 1: Update the user's own profile
-      try {
-        // This would work if the auth token for the new user is returned and set
-        const updateResponse = await updateUserProfile(undefined, undefined, jobTitle);
-        console.log('Updated job title via user profile:', updateResponse);
-      } catch (error) {
-        console.warn('Could not update job title via profile:', error);
-        
-        // Approach 2: If we have a user ID, try updating it directly
-        if (signupResponse && signupResponse.user && signupResponse.user.id) {
-          try {
-            const directUpdateResponse = await apiClient.patch(`/users/${signupResponse.user.id}`, {
-              job_title: jobTitle
-            });
-            console.log('Updated job title directly:', directUpdateResponse.data);
-          } catch (directError) {
-            console.error('Could not update job title directly:', directError);
-          }
-        }
-      }
-    }
-    
-    return signupResponse;
-  } catch (error) {
-    console.error('Staff creation error:', error);
-    throw error;
-  }
-};
 
 export default apiClient;
 
