@@ -24,15 +24,58 @@ apiClient.interceptors.request.use(
   }
 );
 
-export const signup = async (email: string, type: string) => {
+export const signup = async (email: string, type: string, fullName?: string, jobTitle?: string) => {
   try {
-    const response = await apiClient.post('/auth/signup', {
+    const data: {
+      email: string;
+      type: string;
+      full_name?: string;
+      job_title?: string;
+      jobTitle?: string; // Try camelCase version as well
+    } = {
       email,
-      type,
-    });
+      type
+    };
+
+    if (fullName) data.full_name = fullName;
+    if (jobTitle) {
+      data.job_title = jobTitle;   
+    }
+
+    // Log the data being sent to the API for debugging
+    console.log('Signup data being sent:', JSON.stringify(data));
+
+    const response = await apiClient.post('/auth/signup', data);
+    
+    // If job title wasn't accepted in the signup, let's try to update it directly
+    if (jobTitle && response.data && response.data.user && response.data.user.id) {
+      try {
+        await apiClient.patch(`/users/${response.data.user.id}`, {
+          job_title: jobTitle
+        });
+        console.log('Job title updated separately');
+      } catch (updateError) {
+        console.warn('Could not update job title separately:', updateError);
+      }
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Signup error:', error);
+    throw error;
+  }
+};
+
+// Connect staff to school
+export const connectStaffToSchool = async (userEmail: string, schoolId: string) => {
+  try {
+    const response = await apiClient.post('/schools/connect', {
+      user_email: userEmail,
+      school_id: schoolId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Connect staff to school error:', error);
     throw error;
   }
 };
@@ -96,10 +139,11 @@ export const uploadFile = async (file: File) => {
   }
 };
 
-export const updateUserProfile = async (fullName?: string, avatarUrl?: string) => {
-  const data: { full_name?: string; avatar_url?: string } = {};
+export const updateUserProfile = async (fullName?: string, avatarUrl?: string, jobTitle?: string) => {
+  const data: { full_name?: string; avatar_url?: string; job_title?: string } = {};
   if (fullName) data.full_name = fullName;
   if (avatarUrl) data.avatar_url = avatarUrl;
+  if (jobTitle) data.job_title = jobTitle;
 
   try {
     const response = await apiClient.patch('/users/me', data);
@@ -151,6 +195,45 @@ export const storeSchoolQRCode = async (schoolId: string, qrCodeUrl: string) => 
   }
 };
 
+// Dedicated function for staff creation that handles both signup and job title update
+export const createStaffMember = async (email: string, type: string, fullName?: string, jobTitle?: string) => {
+  try {
+    // 1. Create the user account first
+    const signupResponse = await signup(email, type, fullName);
+    console.log('Signup completed, now handling job title');
+    
+    // 2. If job title was provided, update the user profile
+    if (jobTitle) {
+      // We can try two approaches:
+      
+      // Approach 1: Update the user's own profile
+      try {
+        // This would work if the auth token for the new user is returned and set
+        const updateResponse = await updateUserProfile(undefined, undefined, jobTitle);
+        console.log('Updated job title via user profile:', updateResponse);
+      } catch (error) {
+        console.warn('Could not update job title via profile:', error);
+        
+        // Approach 2: If we have a user ID, try updating it directly
+        if (signupResponse && signupResponse.user && signupResponse.user.id) {
+          try {
+            const directUpdateResponse = await apiClient.patch(`/users/${signupResponse.user.id}`, {
+              job_title: jobTitle
+            });
+            console.log('Updated job title directly:', directUpdateResponse.data);
+          } catch (directError) {
+            console.error('Could not update job title directly:', directError);
+          }
+        }
+      }
+    }
+    
+    return signupResponse;
+  } catch (error) {
+    console.error('Staff creation error:', error);
+    throw error;
+  }
+};
 
 export default apiClient;
 
