@@ -2,6 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie'; // Import js-cookie
 import FormData from 'form-data';
 import { toast } from 'sonner';
+import { School } from './interface/school.types';
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:3001', // Replace with your API base URL
@@ -109,15 +110,47 @@ export const updateUserProfile = async (fullName?: string, avatarUrl?: string) =
   }
 };
 
-export const createSchool = async (school: { school_name: string; address: string; contact_number: string; description: string; logo_url?: string }) => {
+export const createSchool = async (school: Omit<School, 'id' | 'createdAt'>) => {
   try {
     const response = await apiClient.post('/schools/create', school);
+    
+    // Extract the school object from the response
+    if (response.data && response.data.status === 'success' && response.data.school) {
+      return response.data.school;
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Create school error:', error);
     throw error;
   }
 };
+
+// Generate QR code for a school
+export const generateSchoolQRCode = async (schoolId: string) => {
+  try {
+    const response = await apiClient.get(`/schools/generate-qr/${schoolId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Generate QR code error:', error);
+    throw error;
+  }
+};
+
+
+// Store QR code URL for a school (separate from the logo)
+export const storeSchoolQRCode = async (schoolId: string, qrCodeUrl: string) => {
+  try {
+    const response = await apiClient.put(`/schools/${schoolId}`, {
+      qr_url: qrCodeUrl
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Store QR code error:', error);
+    throw error;
+  }
+};
+
 
 export default apiClient;
 

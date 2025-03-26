@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { uploadFile, createSchool } from "@/utils/client-api"
+import { 
+  uploadFile, 
+  createSchool, 
+  generateSchoolQRCode,
+  storeSchoolQRCode
+} from "@/utils/client-api"
 import Image from "next/image"
-import { Camera, User } from "lucide-react"
+import { Camera, Clock, School as SchoolIcon } from "lucide-react"
 import { toast } from "sonner"
+import { School } from "@/utils/interface/school.types"
 
 interface AddSchoolModalProps {
   isOpen: boolean
@@ -18,14 +24,31 @@ interface AddSchoolModalProps {
 
 export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
   const [schoolName, setSchoolName] = useState("")
-  const [schoolEmail, setSchoolEmail] = useState("")
   const [address, setAddress] = useState("")
   const [contactNumber, setContactNumber] = useState("")
   const [description, setDescription] = useState("")
+  const [startTime, setStartTime] = useState("")
+  const [endTime, setEndTime] = useState("")
   const [logoPreview, setLogoPreview] = useState<string | undefined>(undefined)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Helper function to convert HTML time input to full ISO date-time string
+  const formatTimeToFullISO = (timeString: string): string => {
+    if (!timeString) return "";
+    
+    // Convert HTML time input (HH:MM) to full ISO format (YYYY-MM-DDThh:mm:ss.sssZ)
+    // Use current date as the base
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours, 10));
+    date.setMinutes(parseInt(minutes, 10));
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    
+    return date.toISOString();
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -44,7 +67,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
   }
 
   const handleSubmit = async () => {
-    if (!schoolName || !schoolEmail || !address || !contactNumber) return
+    if (!schoolName) return
 
     setIsSubmitting(true)
 
@@ -61,22 +84,56 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
     }
 
     try {
-      await createSchool({
-        school_name: schoolName,
-        address,
-        contact_number: contactNumber,
-        description: description || "First test school",
-        logo_url: logoUrl,
-      })
+      // Using the School interface, omitting id and createdAt which are handled by the backend
+      const schoolData: Omit<School, 'id' | 'createdAt'> = {
+        school_name: schoolName
+      };
 
-      toast.success("School created successfully")
+      if (address) schoolData.address = address;
+      if (contactNumber) schoolData.contact_number = contactNumber;
+      if (description) schoolData.description = description;
+      
+      // Convert time inputs to full ISO format before sending to the API
+      if (startTime) schoolData.start_time = formatTimeToFullISO(startTime);
+      if (endTime) schoolData.end_time = formatTimeToFullISO(endTime);
+      
+      if (logoUrl) schoolData.logo_url = logoUrl;
+
+      // Step 1: Create the school
+      const createdSchool = await createSchool(schoolData);
+      
+      if (!createdSchool || !createdSchool._id) {
+        toast.error("School was created but we couldn't retrieve its ID");
+        setIsSubmitting(false);
+        onClose();
+        return;
+      }
+      
+      const schoolId = createdSchool._id;
+
+      // Step 2: Generate QR code for every school, regardless of logo
+      try {
+        const qrResponse = await generateSchoolQRCode(schoolId);
+        
+        if (qrResponse && qrResponse.qr_code_url) {
+          // Only update the school with QR code URL - don't modify the logo that was already set
+          await storeSchoolQRCode(schoolId, qrResponse.qr_code_url);
+          toast.success("School created successfully with QR code");
+        } else {
+          toast.success("School created successfully, but QR code generation didn't return a URL");
+        }
+      } catch (qrError) {
+        console.error("QR code generation error:", qrError);
+        toast.warning("School created successfully, but QR code generation failed");
+      }
 
       // Reset form
       setSchoolName("")
-      setSchoolEmail("")
       setAddress("")
       setContactNumber("")
       setDescription("")
+      setStartTime("")
+      setEndTime("")
       setLogoPreview(undefined)
       setLogoFile(null)
       onClose()
@@ -108,7 +165,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
                 />
               ) : (
                 <div className="w-[120px] h-[120px] rounded-full bg-gray-100 flex items-center justify-center">
-                  <User className="h-16 w-16 text-gray-400" />
+                  <SchoolIcon className="h-16 w-16 text-gray-400" />
                 </div>
               )}
               <button
@@ -124,41 +181,28 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
               ref={fileInputRef}
               onChange={handleLogoChange}
               accept="image/*"
-              className="hidden"
+              className="hidden"  
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={triggerFileInput}
-              className="text-sm"
-            >
-              Change School Logo
-            </Button>
+            <div className="text-xs text-muted-foreground text-center mt-1">
+              A QR code will be automatically generated for every school. If no logo is provided, the QR code will be used as the school logo.
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="schoolName">School Name</Label>
+            <Label htmlFor="schoolName" className="flex items-center gap-1">
+              School Name <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="schoolName"
               placeholder="Type Name here..."
               value={schoolName}
               onChange={(e) => setSchoolName(e.target.value)}
+              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="schoolEmail">School Email</Label>
-            <Input
-              id="schoolEmail"
-              type="email"
-              placeholder="Type email here..."
-              value={schoolEmail}
-              onChange={(e) => setSchoolEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address">Address (Optional)</Label>
             <Input
               id="address"
               placeholder="Type address here..."
@@ -168,13 +212,44 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contactNumber">Contact Number</Label>
+            <Label htmlFor="contactNumber">Contact Number (Optional)</Label>
             <Input
               id="contactNumber"
               placeholder="Type contact number here..."
               value={contactNumber}
               onChange={(e) => setContactNumber(e.target.value)}
             />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startTime">School Start Time (Optional)</Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="startTime"
+                  type="time"
+                  placeholder="e.g., 09:00"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endTime">School End Time (Optional)</Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="endTime"
+                  type="time"
+                  placeholder="e.g., 15:00"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -193,7 +268,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !schoolName || !schoolEmail || !address || !contactNumber}>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !schoolName}>
             {isSubmitting ? "Creating..." : "Confirm School"}
           </Button>
         </DialogFooter>
