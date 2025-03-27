@@ -9,6 +9,7 @@ export interface School {
     end_time?: string
     logo_url?: string
     qr_url?: string
+    vpn_config_url?: string // VPN configuration file URL
     createdAt?: Date | string // For sorting purposes
     updatedAt?: string
 }

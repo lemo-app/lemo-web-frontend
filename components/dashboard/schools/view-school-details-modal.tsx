@@ -1,67 +1,86 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { School } from "@/utils/interface/school.types"
-import Image from "next/image"
-import { Clock, MapPin, Phone, Calendar, QrCode, Info } from "lucide-react"
-import { formatDistance } from "date-fns"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { School } from "@/utils/interface/school.types";
+import Image from "next/image";
+import {
+  Clock,
+  MapPin,
+  Phone,
+  Calendar,
+  QrCode,
+  Info,
+  Shield,
+  Download,
+} from "lucide-react";
+import { formatDistance } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface ViewSchoolDetailsModalProps {
-  school: School | null
-  isOpen: boolean
-  onClose: () => void
+  school: School | null;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 // Helper function to format ISO datetime to readable time
 const formatTimeFromISO = (isoString?: string): string => {
-  if (!isoString) return 'Not specified';
-  
+  if (!isoString) return "Not specified";
+
   try {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
-      return 'Invalid date';
+      return "Invalid date";
     }
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } catch {
-    return 'Invalid date format';
+    return "Invalid date format";
   }
 };
 
 // Helper function to format ISO date to readable date
 const formatDateFromISO = (isoString?: string | Date): string => {
-  if (!isoString) return 'Not specified';
-  
+  if (!isoString) return "Not specified";
+
   try {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
-      return 'Invalid date';
+      return "Invalid date";
     }
-    return date.toLocaleDateString(undefined, { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   } catch {
-    return 'Invalid date format';
+    return "Invalid date format";
   }
 };
 
 // Helper to get the time ago from a date
 const getTimeAgo = (isoString?: string | Date): string => {
-  if (!isoString) return '';
-  
+  if (!isoString) return "";
+
   try {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
-      return '';
+      return "";
     }
     return formatDistance(date, new Date(), { addSuffix: true });
   } catch {
-    return '';
+    return "";
   }
 };
 
-const ViewSchoolDetailsModal = ({ school, isOpen, onClose }: ViewSchoolDetailsModalProps) => {
+const ViewSchoolDetailsModal = ({
+  school,
+  isOpen,
+  onClose,
+}: ViewSchoolDetailsModalProps) => {
   if (!school) return null;
 
   return (
@@ -88,47 +107,85 @@ const ViewSchoolDetailsModal = ({ school, isOpen, onClose }: ViewSchoolDetailsMo
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full w-full bg-gray-100">
-                    <Info className="h-10 w-10 text-gray-400" /> 
+                    <Info className="h-10 w-10 text-gray-400" />
                   </div>
                 )}
               </div>
             </div>
 
             <div className="flex-1 flex flex-col gap-y-3">
-              <h2 className="text-2xl font-bold text-center sm:text-left">{school.school_name}</h2>
-              
+              <h2 className="text-2xl font-bold text-center sm:text-left">
+                {school.school_name}
+              </h2>
+
               <div className="flex items-center text-sm text-gray-500 justify-center sm:justify-start">
                 <Clock className="h-4 w-4 mr-2" />
                 <span>
                   {school.start_time && school.end_time
-                    ? `${formatTimeFromISO(school.start_time)} - ${formatTimeFromISO(school.end_time)}`
-                    : 'Hours not specified'}
+                    ? `${formatTimeFromISO(
+                        school.start_time
+                      )} - ${formatTimeFromISO(school.end_time)}`
+                    : "Hours not specified"}
                 </span>
               </div>
-              
+
               {school.address && (
                 <div className="flex items-center text-sm text-gray-500 justify-center sm:justify-start">
                   <MapPin className="h-4 w-4 mr-2" />
                   <span>{school.address}</span>
                 </div>
               )}
-              
+
               {school.contact_number && (
                 <div className="flex items-center text-sm text-gray-500 justify-center sm:justify-start">
                   <Phone className="h-4 w-4 mr-2" />
                   <span>{school.contact_number}</span>
                 </div>
               )}
-              
-             
             </div>
           </div>
 
           {/* Description */}
           {school.description && (
             <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Description</h3>
+              <h3 className="text-sm font-medium text-gray-600 mb-2">
+                Description
+              </h3>
               <p className="text-sm text-gray-700">{school.description}</p>
+            </div>
+          )}
+
+          {/* VPN Configuration */}
+          {school.vpn_config_url && (
+            <div className="border-t pt-4">
+              <p className="text-xs text-gray-500 mb-2">
+                This file can be used to configure VPN access to the school&apos;s
+                network.
+              </p>
+              <div className="p-4 bg-blue-50 rounded-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <Shield className="h-5 w-5 text-blue-600 mr-2" />
+                  <span className="text-sm text-gray-700">
+                    VPN configuration file is available
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white flex items-center gap-1"
+                  asChild
+                >
+                  <a
+                    href={school.vpn_config_url}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </a>
+                </Button>
+              </div>
             </div>
           )}
 
@@ -155,7 +212,9 @@ const ViewSchoolDetailsModal = ({ school, isOpen, onClose }: ViewSchoolDetailsMo
 
           {/* Technical Details */}
           <div className="border-t pt-4">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Technical Details</h3>
+            <h3 className="text-sm font-medium text-gray-600 mb-2">
+              Technical Details
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div className="p-2 bg-gray-50 rounded">
                 <div className="font-medium text-gray-500">School ID:</div>
@@ -164,25 +223,31 @@ const ViewSchoolDetailsModal = ({ school, isOpen, onClose }: ViewSchoolDetailsMo
               {school.updatedAt && (
                 <div className="p-2 bg-gray-50 rounded">
                   <div className="font-medium text-gray-500">Last Updated:</div>
-                  <div className="text-gray-700">{formatDateFromISO(school.updatedAt)}</div>
-                  <div className="text-gray-500 text-xs">{getTimeAgo(school.updatedAt)}</div>
+                  <div className="text-gray-700">
+                    {formatDateFromISO(school.updatedAt)}
+                  </div>
+                  <div className="text-gray-500 text-xs">
+                    {getTimeAgo(school.updatedAt)}
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Future fields - Placeholder for additional fields */}
+          {/* Created date */}
           <div className="text-xs text-gray-400 border-t pt-4">
-          <div className="flex items-center text-sm text-gray-500 mb-1 mt-2 justify-center sm:justify-start">
-                <Calendar className="h-4 w-4 mr-2" />
-                <span>Created {formatDateFromISO(school.createdAt)} ({getTimeAgo(school.createdAt)})</span>
-              </div>
-            {/* <p>Additional school details will appear here as they become available.</p> */}
+            <div className="flex items-center text-sm text-gray-500 mb-1 mt-2 justify-center sm:justify-start">
+              <Calendar className="h-4 w-4 mr-2" />
+              <span>
+                Created {formatDateFromISO(school.createdAt)} (
+                {getTimeAgo(school.createdAt)})
+              </span>
+            </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default ViewSchoolDetailsModal
+export default ViewSchoolDetailsModal;

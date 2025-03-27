@@ -13,7 +13,7 @@ import {
   storeSchoolQRCode
 } from "@/utils/client-api"
 import Image from "next/image"
-import { Camera, Clock, Loader2, School as SchoolIcon } from "lucide-react"
+import { Camera, Clock, Loader2, School as SchoolIcon, Shield, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { School } from "@/utils/interface/school.types"
 import { useQueryClient } from "@tanstack/react-query"
@@ -33,8 +33,11 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
   const [endTime, setEndTime] = useState("")
   const [logoPreview, setLogoPreview] = useState<string | undefined>(undefined)
   const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [vpnConfigFile, setVpnConfigFile] = useState<File | null>(null)
+  const [vpnConfigName, setVpnConfigName] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const logoFileInputRef = useRef<HTMLInputElement>(null)
+  const vpnConfigFileInputRef = useRef<HTMLInputElement>(null)
 
   // Helper function to convert HTML time input to full ISO date-time string
   const formatTimeToFullISO = (timeString: string): string => {
@@ -64,8 +67,20 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
     }
   }
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click()
+  const handleVpnConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setVpnConfigFile(file)
+      setVpnConfigName(file.name)
+    }
+  }
+
+  const triggerLogoFileInput = () => {
+    logoFileInputRef.current?.click()
+  }
+
+  const triggerVpnConfigFileInput = () => {
+    vpnConfigFileInputRef.current?.click()
   }
 
   const handleSubmit = async () => {
@@ -74,18 +89,33 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
     setIsSubmitting(true)
 
     let logoUrl
-    if (logoFile) {
-      try {
-        logoUrl = await uploadFile(logoFile)
-      } catch (error) {
-        toast.error("Failed to upload logo! Please try again later.")
-        console.error(error)
-        setIsSubmitting(false)
-        return
-      }
-    }
+    let vpnConfigUrl
 
     try {
+      // Upload logo if provided
+      if (logoFile) {
+        try {
+          logoUrl = await uploadFile(logoFile)
+        } catch (error) {
+          toast.error("Failed to upload logo! Please try again later.")
+          console.error("Logo upload error:", error)
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      // Upload VPN config if provided
+      if (vpnConfigFile) {
+        try {
+          vpnConfigUrl = await uploadFile(vpnConfigFile)
+        } catch (error) {
+          toast.error("Failed to upload VPN configuration file! Please try again later.")
+          console.error("VPN config upload error:", error)
+          setIsSubmitting(false)
+          return
+        }
+      }
+
       // Using the School interface, omitting _id and createdAt which are handled by the backend
       const schoolData: Omit<School, '_id' | 'createdAt'> = {
         school_name: schoolName
@@ -100,6 +130,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
       if (endTime) schoolData.end_time = formatTimeToFullISO(endTime);
       
       if (logoUrl) schoolData.logo_url = logoUrl;
+      if (vpnConfigUrl) schoolData.vpn_config_url = vpnConfigUrl;
 
       // Step 1: Create the school
       const createdSchool = await createSchool(schoolData);
@@ -141,6 +172,8 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
       setEndTime("")
       setLogoPreview(undefined)
       setLogoFile(null)
+      setVpnConfigFile(null)
+      setVpnConfigName("")
       onClose()
     } catch (error) {
       toast.error("Failed to create school! Please try again later.")
@@ -152,7 +185,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-xl font-semibold">Add a school to platform</DialogTitle>
         </DialogHeader>
@@ -175,7 +208,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
               )}
               <button
                 type="button"
-                onClick={triggerFileInput}
+                onClick={triggerLogoFileInput}
                 className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-md hover:bg-primary/90 transition-colors"
               >
                 <Camera className="h-5 w-5" />
@@ -183,7 +216,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
             </div>
             <input
               type="file"
-              ref={fileInputRef}
+              ref={logoFileInputRef}
               onChange={handleLogoChange}
               accept="image/*"
               className="hidden"  
@@ -258,6 +291,45 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="vpnConfig">VPN Configuration File (Optional) 
+            <span className="text-xs text-muted-foreground ms-4">
+              Upload a VPN configuration file (.ovpn) for school network access.
+            </span>
+
+            </Label>
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="vpnConfig"
+                  placeholder="Upload VPN configuration file..."
+                  value={vpnConfigName}
+                  readOnly
+                  className="pl-10"
+                />
+              </div>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="flex gap-2"
+                onClick={triggerVpnConfigFileInput}
+              >
+                <Upload className="h-4 w-4" />
+                Browse
+              </Button>
+            </div>
+            <input
+              type="file"
+              ref={vpnConfigFileInputRef}
+              onChange={handleVpnConfigChange}
+              accept=".ovpn,.conf,.config"
+              className="hidden"  
+            />
+            
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
@@ -274,7 +346,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !schoolName}>
-            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {isSubmitting ? "Creating..." : "Confirm School"}
           </Button>
         </DialogFooter>
