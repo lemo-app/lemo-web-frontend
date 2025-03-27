@@ -50,6 +50,7 @@ export default function ManageSchools() {
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [editingSchool, setEditingSchool] = useState<string | null>(null)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   
   // Delete modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -59,8 +60,6 @@ export default function ManageSchools() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [schoolToView, setSchoolToView] = useState<School | null>(null)
 
-  const itemsPerPage = 10
-  
   // Convert our UI sort option to API parameters
   const getSortParams = () => {
     switch(sortOption) {
@@ -162,7 +161,7 @@ export default function ManageSchools() {
     isError, 
     error 
   } = useQuery({
-    queryKey: ['schools', currentPage, sortOption, debouncedSearchQuery],
+    queryKey: ['schools', currentPage, itemsPerPage, sortOption, debouncedSearchQuery],
     queryFn: () => fetchSchools(buildQueryParams()),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -187,6 +186,12 @@ export default function ManageSchools() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Handle limit change
+  const handleLimitChange = (limit: number) => {
+    setItemsPerPage(limit);
+    setCurrentPage(1); // Reset to first page when changing limit
   };
 
   // Get sort option display text
@@ -355,6 +360,8 @@ export default function ManageSchools() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onLimitChange={handleLimitChange}
         />
       )}
       

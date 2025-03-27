@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Download, Plus } from "lucide-react";
 import React, { useState } from "react";
 import { AddSchoolModal } from "../schools/add-school-modal";
-import { toast } from "sonner";
 import { AddStudentModal } from "../students/add-student-modal";
 import { AddStaffModal } from "../staff/add-staff-modal";
 import { InviteAdminModal } from "../admins/invite-admin-modal";

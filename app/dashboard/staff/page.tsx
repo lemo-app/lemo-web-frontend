@@ -32,13 +32,19 @@ export default function ManageStaff() {
   )
 
   const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  const itemsPerPage = 10
   const totalItems = staffMembers.length
   const totalPages = Math.ceil(totalItems / itemsPerPage)
 
   // Get current page data
   const currentStaff = staffMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  // Handle limit change
+  const handleLimitChange = (limit: number) => {
+    setItemsPerPage(limit)
+    setCurrentPage(1) // Reset to first page when changing limit
+  }
 
   // Status badge styling
   const getStatusBadge = (status: Staff["status"]) => {
@@ -177,6 +183,8 @@ export default function ManageStaff() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onLimitChange={handleLimitChange}
       />
     </div>
   )

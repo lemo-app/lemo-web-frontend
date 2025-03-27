@@ -152,7 +152,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-xl font-semibold">Add a school to platform</DialogTitle>
         </DialogHeader>
