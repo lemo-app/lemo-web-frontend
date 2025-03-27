@@ -131,7 +131,7 @@ export default function ManageAdmins() {
               <TableHead className="w-[250px]">Email</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>Invitation Time</TableHead>
               <TableHead>Updated At</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
