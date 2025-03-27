@@ -1,5 +1,6 @@
 export interface School {
-    id: number // MongoDB will use _id, but we'll keep id for frontend
+    _id: string  // MongoDB id (required)
+    id?: string | number // Legacy id (optional)
     school_name: string
     address?: string
     contact_number?: string
@@ -7,5 +8,7 @@ export interface School {
     start_time?: string
     end_time?: string
     logo_url?: string
-    createdAt?: Date // For sorting purposes
+    qr_url?: string
+    createdAt?: Date | string // For sorting purposes
+    updatedAt?: string
 }

@@ -6,16 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { login } from "@/utils/client-api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useUserStore } from "@/utils/store/user-store";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
+  const [passwordVisible, setPasswordVisible] = useState(false); // State to track password visibility
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -89,14 +91,27 @@ export function LoginForm({
               Forgot your password?
             </Link>
           </div>
+          <div className="relative">
           <Input
             id="password"
-            type="password"
+            type={passwordVisible ? "text" : "password"} // Toggle input type
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
           />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            onClick={() => setPasswordVisible(!passwordVisible)}
+          >
+            {passwordVisible ? (
+              <EyeOffIcon className="h-5 w-5 text-gray-500" />
+            ) : (
+              <EyeIcon className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
+        </div>
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Logging in..." : "Login"}

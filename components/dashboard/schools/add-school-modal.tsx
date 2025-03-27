@@ -13,9 +13,10 @@ import {
   storeSchoolQRCode
 } from "@/utils/client-api"
 import Image from "next/image"
-import { Camera, Clock, School as SchoolIcon } from "lucide-react"
+import { Camera, Clock, Loader2, School as SchoolIcon } from "lucide-react"
 import { toast } from "sonner"
 import { School } from "@/utils/interface/school.types"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface AddSchoolModalProps {
   isOpen: boolean
@@ -23,6 +24,7 @@ interface AddSchoolModalProps {
 }
 
 export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
+  const queryClient = useQueryClient()
   const [schoolName, setSchoolName] = useState("")
   const [address, setAddress] = useState("")
   const [contactNumber, setContactNumber] = useState("")
@@ -84,8 +86,8 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
     }
 
     try {
-      // Using the School interface, omitting id and createdAt which are handled by the backend
-      const schoolData: Omit<School, 'id' | 'createdAt'> = {
+      // Using the School interface, omitting _id and createdAt which are handled by the backend
+      const schoolData: Omit<School, '_id' | 'createdAt'> = {
         school_name: schoolName
       };
 
@@ -126,6 +128,9 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
         console.error("QR code generation error:", qrError);
         toast.warning("School created successfully, but QR code generation failed");
       }
+
+      // Invalidate the schools query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['schools'] });
 
       // Reset form
       setSchoolName("")
@@ -269,6 +274,7 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !schoolName}>
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isSubmitting ? "Creating..." : "Confirm School"}
           </Button>
         </DialogFooter>

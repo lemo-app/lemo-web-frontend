@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, Lock, MessageSquare, Trash2, ArrowUpDown, ChevronDown } from "lucide-react"
+import { Edit, Lock, Trash2, ArrowUpDown, ChevronDown, Eye } from "lucide-react"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import HeaderWithButtonsLinks from "@/components/dashboard/common/header-with-buttons-links"
 import Image from "next/image"
@@ -15,7 +15,12 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
+import { fetchSchools, FetchSchoolsParams, updateSchool } from "@/utils/client-api"
+import { toast } from "sonner"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { School } from "@/utils/interface/school.types"
+import DeleteSchoolModal from "@/components/dashboard/schools/delete-school-modal"
+import ViewSchoolDetailsModal from "@/components/dashboard/schools/view-school-details-modal"
 
 // Define sorting options
 type SortOption = 'nameAsc' | 'nameDesc' | 'dateAsc' | 'dateDesc' | 'none';
@@ -26,6 +31,9 @@ const formatTimeFromISO = (isoString?: string): string => {
   
   try {
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
+      return isoString; // Return original string if date is invalid
+    }
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch {
     return isoString; // Return original string if parsing fails
@@ -33,79 +41,153 @@ const formatTimeFromISO = (isoString?: string): string => {
 };
 
 export default function ManageSchools() {
-  // Sample data with ISO format times
-  const [schools] = useState<School[]>(
-    Array.from({ length: 24 }, (_, i) => {
-      // Create proper ISO format dates for start and end times
-      const today = new Date();
-      const startTime = new Date(today);
-      startTime.setHours(9, 0, 0, 0);
-      
-      const endTime = new Date(today);
-      endTime.setHours(15, 0, 0, 0);
-      
-      return {
-        id: i + 1,
-        school_name: "School Name " + (i + 1),
-        address: `123 Education St, City ${i + 1}`,
-        contact_number: `+1 555-${1000 + i}`,
-        description: `Description for School ${i + 1}. This is a sample description.`,
-        start_time: startTime.toISOString(), // Full ISO format
-        end_time: endTime.toISOString(), // Full ISO format
-        logo_url: i % 3 === 0 ? "/placeholder.svg" : undefined,
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
-      };
-    })
-  )
-
+  // Get the query client for invalidation
+  const queryClient = useQueryClient();
+  
+  // Query parameters state
   const [currentPage, setCurrentPage] = useState(1)
   const [sortOption, setSortOption] = useState<SortOption>('none')
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  const [editingSchool, setEditingSchool] = useState<string | null>(null)
+  
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [schoolToDelete, setSchoolToDelete] = useState<Pick<School, '_id' | 'school_name'> | null>(null)
+  
+  // View details modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [schoolToView, setSchoolToView] = useState<School | null>(null)
 
   const itemsPerPage = 10
   
-  // Function to sort schools based on current sort option
-  const getSortedSchools = () => {
-    let sortedSchools = [...schools];
-    
-    // First apply search filter if there is a search query
-    if (searchQuery) {
-      sortedSchools = sortedSchools.filter(school => 
-        school.school_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        school.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        school.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        school.contact_number?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    // Then apply sorting
-    switch (sortOption) {
+  // Convert our UI sort option to API parameters
+  const getSortParams = () => {
+    switch(sortOption) {
       case 'nameAsc':
-        return sortedSchools.sort((a, b) => a.school_name.localeCompare(b.school_name));
+        return { sortBy: 'school_name', order: 'asc' };
       case 'nameDesc':
-        return sortedSchools.sort((a, b) => b.school_name.localeCompare(a.school_name));
+        return { sortBy: 'school_name', order: 'desc' };
       case 'dateAsc':
-        return sortedSchools.sort((a, b) => 
-          (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0)
-        );
+        return { sortBy: 'createdAt', order: 'asc' };
       case 'dateDesc':
-        return sortedSchools.sort((a, b) => 
-          (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
-        );
+        return { sortBy: 'createdAt', order: 'desc' };
       default:
-        return sortedSchools;
+        return { sortBy: 'school_name', order: 'asc' };
     }
   };
 
-  const sortedSchools = getSortedSchools();
-  const totalItems = sortedSchools.length;
+  // Build query parameters for React Query
+  const buildQueryParams = (): FetchSchoolsParams => {
+    const { sortBy, order } = getSortParams();
+    return {
+      page: currentPage,
+      limit: itemsPerPage,
+      search: debouncedSearchQuery,
+      sortBy,
+      order: order as 'asc' | 'desc'
+    };
+  };
+  
+  // Setup edit mutation
+  const updateSchoolMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Partial<Omit<School, '_id'>> }) => 
+      updateSchool(id, data),
+    onSuccess: () => {
+      // Invalidate the schools query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['schools'] });
+      toast.success('School updated successfully');
+      setEditingSchool(null); // Clear editing state
+    },
+    onError: (error) => {
+      console.error('Failed to update school:', error);
+      toast.error('Failed to update school');
+    }
+  });
+  
+  // Handle opening the delete modal
+  const handleOpenDeleteModal = (school: Pick<School, '_id' | 'school_name'>) => {
+    setSchoolToDelete(school)
+    setIsDeleteModalOpen(true)
+  }
+  
+  // Handle closing the delete modal
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    // Clear the school to delete after a short delay to avoid UI flicker
+    setTimeout(() => {
+      setSchoolToDelete(null)
+    }, 300)
+  }
+  
+  // Handle edit school
+  const handleEditSchool = (schoolId: string) => {
+    // In a real app, you would open a modal or navigate to an edit page
+    // For now, just show a toast message
+    setEditingSchool(schoolId);
+    toast.info(`Edit functionality for school ${schoolId} would open a modal or edit page`, {
+      description: "This is a placeholder for the edit functionality"
+    });
+    
+    // Clear the editing state after a brief delay
+    setTimeout(() => {
+      setEditingSchool(null);
+    }, 2000);
+    
+    // In a real implementation, you would:
+    // 1. Open a modal or navigate to an edit page
+    // 2. Get form data from the user
+    // 3. Then call updateSchoolMutation.mutate({ id: schoolId, data: formData })
+  };
+  
+  // Handle opening the view details modal
+  const handleOpenViewModal = (school: School) => {
+    setSchoolToView(school)
+    setIsViewModalOpen(true)
+  }
+  
+  // Handle closing the view details modal
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false)
+    // Clear the school to view after a short delay to avoid UI flicker
+    setTimeout(() => {
+      setSchoolToView(null)
+    }, 300)
+  }
+  
+  // React Query hook for fetching schools
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    error 
+  } = useQuery({
+    queryKey: ['schools', currentPage, sortOption, debouncedSearchQuery],
+    queryFn: () => fetchSchools(buildQueryParams()),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+  
+  // Extract data from query result
+  const schools = data?.data?.schools || [];
+  const totalItems = data?.data?.totalSchools || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  
+  // Effect for debouncing search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
 
-  // Get current page data from sorted schools
-  const currentSchools = sortedSchools.slice(
-    (currentPage - 1) * itemsPerPage, 
-    currentPage * itemsPerPage
-  );
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Handle search input
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   // Get sort option display text
   const getSortOptionText = (option: SortOption) => {
@@ -117,6 +199,12 @@ export default function ManageSchools() {
       default: return 'Sort by';
     }
   };
+
+  // Handle error
+  if (isError) {
+    console.error('Error fetching schools:', error);
+    toast.error('Failed to load schools data');
+  }
 
   return (
     <div className="space-y-6">
@@ -134,10 +222,7 @@ export default function ManageSchools() {
             placeholder="Search by schools name..." 
             className="pl-10" 
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1); // Reset to first page when searching
-            }}
+            onChange={handleSearchChange}
           />
         </div>
 
@@ -181,8 +266,24 @@ export default function ManageSchools() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentSchools.map((school) => (
-              <TableRow key={school.id} className="hover:bg-gray-50">
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  Loading schools...
+                </TableCell>
+              </TableRow>
+            )}
+            
+            {!isLoading && schools.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  No schools found
+                </TableCell>
+              </TableRow>
+            )}
+            
+            {!isLoading && schools.map((school) => (
+              <TableRow key={school._id} className="hover:bg-gray-50">
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -215,13 +316,29 @@ export default function ManageSchools() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MessageSquare className="h-4 w-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => handleOpenViewModal(school)}
+                    >
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => handleEditSchool(school._id)}
+                      disabled={updateSchoolMutation.isPending && editingSchool === school._id}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => handleOpenDeleteModal({ _id: school._id, school_name: school.school_name })}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -232,11 +349,27 @@ export default function ManageSchools() {
         </Table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        totalItems={totalItems}
+      {schools.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={totalItems}
+        />
+      )}
+      
+      {/* Delete School Modal */}
+      <DeleteSchoolModal 
+        school={schoolToDelete}
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+      />
+      
+      {/* View School Details Modal */}
+      <ViewSchoolDetailsModal 
+        school={schoolToView}
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
       />
     </div>
   )

@@ -154,7 +154,7 @@ export const updateUserProfile = async (fullName?: string, avatarUrl?: string, j
   }
 };
 
-export const createSchool = async (school: Omit<School, 'id' | 'createdAt'>) => {
+export const createSchool = async (school: Omit<School, '_id' | 'createdAt'>) => {
   try {
     const response = await apiClient.post('/schools/create', school);
     
@@ -181,6 +181,52 @@ export const generateSchoolQRCode = async (schoolId: string) => {
   }
 };
 
+// Fetch schools with pagination, sorting and search
+export interface SchoolsResponse {
+  status: string;
+  data: {
+    schools: School[];
+    totalSchools: number;
+  };
+}
+
+// Fetch params interface
+export interface FetchSchoolsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+}
+
+export const fetchSchools = async ({
+  page = 1, 
+  limit = 10, 
+  search = '',
+  sortBy = 'school_name',
+  order = 'asc'
+}: FetchSchoolsParams = {}): Promise<SchoolsResponse> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (sortBy) {
+      params.append('sortBy', sortBy);
+      params.append('order', order);
+    }
+    
+    const response = await apiClient.get(`/schools?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch schools error:', error);
+    throw error;
+  }
+};
 
 // Store QR code URL for a school (separate from the logo)
 export const storeSchoolQRCode = async (schoolId: string, qrCodeUrl: string) => {
@@ -195,6 +241,27 @@ export const storeSchoolQRCode = async (schoolId: string, qrCodeUrl: string) => 
   }
 };
 
+// Update a school by ID
+export const updateSchool = async (schoolId: string, schoolData: Partial<Omit<School, '_id'>>) => {
+  try {
+    const response = await apiClient.put(`/schools/${schoolId}`, schoolData);
+    return response.data;
+  } catch (error) {
+    console.error('Update school error:', error);
+    throw error;
+  }
+};
+
+// Delete a school by ID
+export const deleteSchool = async (schoolId: string) => {
+  try {
+    const response = await apiClient.delete(`/schools/${schoolId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Delete school error:', error);
+    throw error;
+  }
+};
 
 export default apiClient;
 
