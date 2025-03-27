@@ -9,11 +9,13 @@ import { InviteAdminModal } from "../admins/invite-admin-modal";
 interface HeaderWithButtonsLinksProps {
   title: string;
   modalTitle: string;
+  onModalOpen?: () => void; // Optional callback for custom modal handling
 }
 
 const HeaderWithButtonsLinks = ({
   title,
   modalTitle,
+  onModalOpen
 }: HeaderWithButtonsLinksProps) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -34,13 +36,20 @@ const HeaderWithButtonsLinks = ({
           variant={isAddModalOpen ? "outline" : "default"}
           className="gap-2 "
           onClick={() => {
+            // If there's a custom handler, use it
+            if (onModalOpen) {
+              onModalOpen();
+              return;
+            }
+            
+            // Default behavior
             if (modalTitle === "Add Student") {
               setIsAddStudentModalOpen(true);
             } else if(modalTitle === "Add Staff") {
               setIsAddStaffModalOpen(true);
-            } else if(modalTitle === "Add Admin") {
+            } else if(modalTitle === "Invite Admin" || modalTitle === "Add Admin") {
               setIsAddAdminModalOpen(true);
-            }else {
+            } else {
               setIsAddModalOpen(!isAddModalOpen);
             }
           }}
@@ -50,25 +59,27 @@ const HeaderWithButtonsLinks = ({
         </Button>
       </div>
 
-      <AddSchoolModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
-      <AddStudentModal
-        isOpen={isAddStudentModalOpen}
-        onClose={() => setIsAddStudentModalOpen(false)}
-      />
-
-      <InviteAdminModal
-        isOpen={isAddAdminModalOpen}
-        onClose={() => setIsAddAdminModalOpen(false)}
-      />
-
-      <AddStaffModal
-        isOpen={isAddStaffModalOpen}
-        onClose={() => setIsAddStaffModalOpen(false)}
-      />
-      
+      {/* Only render the modals if no custom handler is provided */}
+      {!onModalOpen && (
+        <>
+          <AddSchoolModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+          />
+          <AddStudentModal
+            isOpen={isAddStudentModalOpen}
+            onClose={() => setIsAddStudentModalOpen(false)}
+          />
+          <InviteAdminModal
+            isOpen={isAddAdminModalOpen}
+            onClose={() => setIsAddAdminModalOpen(false)}
+          />
+          <AddStaffModal
+            isOpen={isAddStaffModalOpen}
+            onClose={() => setIsAddStaffModalOpen(false)}
+          />
+        </>
+      )}
     </div>
   );
 };

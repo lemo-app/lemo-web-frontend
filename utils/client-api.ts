@@ -263,6 +263,50 @@ export const deleteSchool = async (schoolId: string) => {
   }
 };
 
+// Fetch users with pagination, sorting and search
+export interface FetchUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  type?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+}
+
+export const fetchUsers = async ({
+  page = 1, 
+  limit = 10, 
+  search = '',
+  type = '',
+  sortBy = 'createdAt',
+  order = 'desc'
+}: FetchUsersParams = {}) => {
+  try {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (type) {
+      params.append('type', type);
+    }
+    
+    if (sortBy) {
+      params.append('sortBy', sortBy);
+      params.append('order', order);
+    }
+    
+    const response = await apiClient.get(`/users/all?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch users error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 
