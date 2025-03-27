@@ -47,15 +47,31 @@ export const signup = async (email: string, type: string, fullName?: string, job
 
     const response = await apiClient.post('/auth/signup', data);
     
-    // If job title wasn't accepted in the signup, let's try to update it directly
-    if (jobTitle && response.data && response.data.user && response.data.user.id) {
-      try {
-        await apiClient.patch(`/users/${response.data.user.id}`, {
-          job_title: jobTitle
-        });
-        console.log('Job title updated separately');
-      } catch (updateError) {
-        console.warn('Could not update job title separately:', updateError);
+    // If the user was created successfully, but we need to update some fields directly
+    if (response.data && response.data.user && response.data.user.id) {
+      const updateData: { full_name?: string; job_title?: string } = {};
+      let needsUpdate = false;
+      
+      // Check if we need to update full_name
+      if (fullName && (!response.data.user.full_name || response.data.user.full_name !== fullName)) {
+        updateData.full_name = fullName;
+        needsUpdate = true;
+      }
+      
+      // Check if we need to update job_title
+      if (jobTitle && (!response.data.user.job_title || response.data.user.job_title !== jobTitle)) {
+        updateData.job_title = jobTitle;
+        needsUpdate = true;
+      }
+      
+      // Only make the update call if we have fields to update
+      if (needsUpdate) {
+        try {
+          await apiClient.patch(`/users/${response.data.user.id}`, updateData);
+          console.log('User profile updated with additional fields');
+        } catch (updateError) {
+          console.warn('Could not update user profile fields separately:', updateError);
+        }
       }
     }
     
@@ -269,6 +285,9 @@ export interface FetchUsersParams {
   limit?: number;
   search?: string;
   type?: string;
+  school?: string;
+  section?: string;
+  job_title?: string;
   sortBy?: string;
   order?: 'asc' | 'desc';
 }
@@ -278,6 +297,9 @@ export const fetchUsers = async ({
   limit = 10, 
   search = '',
   type = '',
+  school = '',
+  section = '',
+  job_title = '',
   sortBy = 'createdAt',
   order = 'desc'
 }: FetchUsersParams = {}) => {
@@ -292,6 +314,18 @@ export const fetchUsers = async ({
     
     if (type) {
       params.append('type', type);
+    }
+    
+    if (school) {
+      params.append('school', school);
+    }
+    
+    if (section) {
+      params.append('section', section);
+    }
+    
+    if (job_title) {
+      params.append('job_title', job_title);
     }
     
     if (sortBy) {

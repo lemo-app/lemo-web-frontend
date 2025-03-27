@@ -1,18 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Plus, Trash2, Loader2 } from "lucide-react"
+import { Plus, Trash2, Loader2, Search, School as SchoolIcon, Building, Lock } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { connectStaffToSchool, signup } from "@/utils/client-api"
+import { connectStaffToSchool, signup, fetchSchools } from "@/utils/client-api"
 import { toast } from "sonner"
-
-// Static school ID as requested
-const SCHOOL_ID = "67e3d08a10ea1b14d7af4142"
+import { School } from "@/utils/interface/school.types"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import apiClient from "@/utils/client-api"
 
 interface AddStaffModalProps {
   isOpen: boolean
@@ -20,6 +20,7 @@ interface AddStaffModalProps {
 }
 
 export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
+  const queryClient = useQueryClient()
   const [staffName, setStaffName] = useState("")
   const [staffEmail, setStaffEmail] = useState("")
   const [staffRole, setStaffRole] = useState("")
@@ -29,8 +30,80 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
   const [customRoles, setCustomRoles] = useState<string[]>([])
   const [selectOpen, setSelectOpen] = useState(false)
   const [typeSelectOpen, setTypeSelectOpen] = useState(false)
+  const [schoolSelectOpen, setSchoolSelectOpen] = useState(false)
+  const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
+  const [schoolSearch, setSchoolSearch] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [currentUserSchool, setCurrentUserSchool] = useState<string | null>(null)
+  const [currentUserSchoolName, setCurrentUserSchoolName] = useState<string | null>(null)
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false)
+  const [currentUserType, setCurrentUserType] = useState<string | null>(null)
+  const schoolSearchInputRef = useRef<HTMLInputElement>(null)
+
+  // Check if user is super_admin
+  const isSuperAdmin = currentUserType === "super_admin"
+
+  // Fetch schools with search - only for super_admin users and when staff type is admin
+  const { data: schoolsData, isLoading: schoolsLoading } = useQuery({
+    queryKey: ['schools', { search: schoolSearch }],
+    queryFn: () => fetchSchools({ 
+      search: schoolSearch,
+      limit: 20,
+      sortBy: 'school_name',
+      order: 'asc'
+    }),
+    enabled: isOpen && isSuperAdmin && staffType === "admin", // Only fetch when modal is open, user is super_admin, and type is admin
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+
+  const schools = schoolsData?.data?.schools || []
+
+  // Fetch current user's information and school
+  const fetchCurrentUserInfo = async () => {
+    setIsLoadingUserData(true)
+    try {
+      const response = await apiClient.get('/users/me')
+      
+      // Store user type
+      if (response.data?.type) {
+        setCurrentUserType(response.data.type)
+        
+        // For non-super_admin users, always set staffType to school_manager
+        if (response.data.type !== "super_admin") {
+          setStaffType("school_manager")
+        }
+      }
+      
+      // Store user's school
+      if (response.data?.school) {
+        setCurrentUserSchool(response.data.school)
+        
+        // If we have the school ID but not the name, try to get the school details
+        if (response.data.school && !currentUserSchoolName) {
+          try {
+            const schoolResponse = await fetchSchools({ limit: 100 })
+            const schoolData = schoolResponse.data?.schools?.find(
+              (s: School) => s._id === response.data.school
+            )
+            if (schoolData) {
+              setCurrentUserSchoolName(schoolData.school_name)
+            }
+          } catch (schoolError) {
+            console.error("Error fetching school details:", schoolError)
+          }
+        }
+      } else if (response.data.type !== "super_admin") {
+        // Only show error for non-super_admin users
+        toast.error("You are not associated with any school. Please contact an administrator.")
+      }
+    } catch (err) {
+      console.error("Error fetching current user info:", err)
+      toast.error("Could not retrieve your user information.")
+    } finally {
+      setIsLoadingUserData(false)
+    }
+  }
 
   // Load custom roles from localStorage on component mount
   useEffect(() => {
@@ -51,33 +124,84 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
     loadCustomRoles()
   }, [])
 
+  // Effect to fetch user's information when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCurrentUserInfo()
+    }
+  }, [isOpen])
+
+  // Focus school search input when school select opens
+  useEffect(() => {
+    if (schoolSelectOpen && schoolSearchInputRef.current) {
+      setTimeout(() => {
+        schoolSearchInputRef.current?.focus()
+      }, 100)
+    }
+  }, [schoolSelectOpen])
+
   // All available roles for job title (custom + predefined)
   const allRoles = [...customRoles]
 
   const handleSubmit = async () => {
-    if (!staffEmail || !staffRole || !staffType) return
+    if (!staffEmail || !staffRole || !staffType) {
+      toast.error("Please fill all required fields")
+      return
+    }
+    
+    // For non-super_admin users or school_manager type, we need to have a current user school
+    if ((staffType === "school_manager" || !isSuperAdmin) && !currentUserSchool) {
+      toast.error("You are not associated with a school. Please contact an administrator.")
+      return
+    }
+    
+    // For super_admin users adding an admin, we need to have a selected school
+    if (isSuperAdmin && staffType === "admin" && !selectedSchool) {
+      toast.error("Please select a school")
+      return
+    }
+    
+    // Determine which school ID to use based on user type and staff type
+    let schoolId: string
+    let schoolName: string
+    
+    if (!isSuperAdmin || staffType === "school_manager") {
+      // Non-super_admin users or school_manager staff always use current user's school
+      schoolId = currentUserSchool!
+      schoolName = currentUserSchoolName || "Your School"
+    } else {
+      // Super admin adding an admin - use selected school
+      schoolId = selectedSchool!._id
+      schoolName = selectedSchool!.school_name
+    }
     
     setIsSubmitting(true)
     setError("")
     
     try {
-      // console.log("Submitting staff with job title:", staffRole);
+      await signup(
+        staffEmail, 
+        staffType, 
+        staffName,
+        staffRole
+      );
       
-      // Use the specialized createStaffMember function that handles both signup and job title update
-      await signup(staffEmail, staffType, staffName, staffRole);
-      // console.log("Staff creation response:", response);
-      
-      // Connect the staff to the school
-      await connectStaffToSchool(staffEmail, SCHOOL_ID)
+      // Connect the staff to the appropriate school
+      await connectStaffToSchool(staffEmail, schoolId)
       
       // Notify success
-      toast.success(`Staff member ${staffName || staffEmail} added successfully!`)
+      toast.success(`Staff member ${staffName || staffEmail} added successfully to ${schoolName}!`)
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
       
       // Reset form
       setStaffName("")
       setStaffEmail("")
       setStaffRole("")
       setStaffType("school_manager")
+      setSelectedSchool(null)
+      setSchoolSearch("")
       onClose()
     } catch (err) {
       console.error("Error creating staff:", err)
@@ -100,7 +224,6 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
     }
     
     const roleTrimmed = newRole.trim().toLowerCase();
-    console.log("Adding custom role:", roleTrimmed);
     
     const updatedRoles = [...customRoles, roleTrimmed]
     setCustomRoles(updatedRoles)
@@ -128,6 +251,23 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
     // If the currently selected role is being removed, reset the selection
     if (staffRole === roleToRemove) {
       setStaffRole("")
+    }
+  }
+
+  // Handle school selection (only for super_admin)
+  const handleSelectSchool = (school: School) => {
+    if (isSuperAdmin) {
+      setSelectedSchool(school)
+      setSchoolSelectOpen(false)
+      setSchoolSearch("")
+    }
+  }
+
+  // Handle staff type change (only for super_admin)
+  const handleTypeChange = (type: "admin" | "school_manager") => {
+    if (isSuperAdmin) {
+      setStaffType(type)
+      setTypeSelectOpen(false)
     }
   }
 
@@ -160,17 +300,29 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
     )
   }
 
-  // Custom type selector
+  // Custom type selector (for super_admin only)
   const TypeItem = ({ type, label }: { type: "admin" | "school_manager"; label: string }) => {
     return (
       <div 
         className="flex items-center w-full px-2 py-1.5 text-sm rounded-sm cursor-default hover:bg-accent hover:text-accent-foreground"
-        onClick={() => {
-          setStaffType(type)
-          setTypeSelectOpen(false)
-        }}
+        onClick={() => handleTypeChange(type)}
       >
         {label}
+      </div>
+    )
+  }
+
+  // School item component (for super_admin only)
+  const SchoolItem = ({ school }: { school: School }) => {
+    return (
+      <div 
+        className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-sm cursor-default hover:bg-accent hover:text-accent-foreground"
+        onClick={() => handleSelectSchool(school)}
+      >
+        <div className="flex-shrink-0 w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+          <SchoolIcon className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <div className="flex-1 truncate">{school.school_name}</div>
       </div>
     )
   }
@@ -211,28 +363,143 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
             />
           </div>
 
+          {/* Staff Type Selection - Only editable for super_admin */}
           <div className="space-y-2">
             <Label htmlFor="staffType">Staff Type <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <div
-                className={cn(
-                  "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground",
-                  staffType ? "" : "text-muted-foreground"
-                )}
-                onClick={() => setTypeSelectOpen(!typeSelectOpen)}
-              >
-                {staffType === "admin" ? "Admin" : "School Manager"}
+            {isLoadingUserData ? (
+              <div className="flex h-10 items-center justify-center rounded-md border border-input bg-background">
+                <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
+                <span className="text-sm text-muted-foreground">Loading...</span>
               </div>
-              
-              {typeSelectOpen && (
-                <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-                  <div className="space-y-1">
-                    <TypeItem type="admin" label="Admin" />
-                    <TypeItem type="school_manager" label="School Manager" />
-                  </div>
+            ) : isSuperAdmin ? (
+              // For super_admin, show dropdown to select staff type
+              <div className="relative">
+                <div
+                  className={cn(
+                    "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground",
+                    staffType ? "" : "text-muted-foreground"
+                  )}
+                  onClick={() => setTypeSelectOpen(!typeSelectOpen)}
+                >
+                  {staffType === "admin" ? "Admin" : "School Manager"}
                 </div>
-              )}
-            </div>
+                
+                {typeSelectOpen && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                    <div className="space-y-1">
+                      <TypeItem type="admin" label="Admin" />
+                      <TypeItem type="school_manager" label="School Manager" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // For non-super_admin, show locked school_manager type
+              <div className="flex h-10 items-center px-3 rounded-md border border-input bg-background">
+                <div className="flex items-center gap-2 text-sm">
+                  <span>School Manager</span>
+                  <Lock className="h-3.5 w-3.5 ml-2 text-muted-foreground" />
+                </div>
+              </div>
+            )}
+            {!isSuperAdmin && (
+              <p className="text-xs text-muted-foreground">
+                You can only add School Manager staff.
+              </p>
+            )}
+          </div>
+
+          {/* School Selection - Different UI based on user type and staff type */}
+          <div className="space-y-2">
+            <Label htmlFor="school">
+              {isSuperAdmin && staffType === "admin" ? "Select School" : "School"} 
+              <span className="text-destructive">*</span>
+            </Label>
+            
+            {isLoadingUserData ? (
+              <div className="flex h-10 items-center justify-center rounded-md border border-input bg-background">
+                <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
+                <span className="text-sm text-muted-foreground">Loading your school...</span>
+              </div>
+            ) : isSuperAdmin && staffType === "admin" ? (
+              // School dropdown for super_admin when adding an admin
+              <div className="relative">
+                <div
+                  className={cn(
+                    "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
+                    selectedSchool ? "" : "text-muted-foreground"
+                  )}
+                  onClick={() => setSchoolSelectOpen(!schoolSelectOpen)}
+                >
+                  {selectedSchool ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-shrink-0 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center">
+                        <SchoolIcon className="h-3 w-3 text-primary" />
+                      </div>
+                      <span>{selectedSchool.school_name}</span>
+                    </div>
+                  ) : (
+                    "Select school"
+                  )}
+                </div>
+                
+                {schoolSelectOpen && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
+                    <div className="relative mb-2">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        ref={schoolSearchInputRef}
+                        placeholder="Search schools..."
+                        value={schoolSearch}
+                        onChange={(e) => setSchoolSearch(e.target.value)}
+                        className="pl-8 h-9"
+                      />
+                    </div>
+                    
+                    <ScrollArea className="h-[200px]">
+                      <div className="space-y-1">
+                        {schoolsLoading ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                          </div>
+                        ) : schools.length > 0 ? (
+                          schools.map((school) => (
+                            <SchoolItem key={school._id} school={school} />
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-muted-foreground italic">
+                            {schoolSearch ? "No schools found matching your search" : "No schools available"}
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
+              </div>
+            ) : currentUserSchool ? (
+              // Locked school display for non-super_admin or when staff type is school_manager
+              <div className="flex h-10 items-center px-3 rounded-md border border-input bg-background">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex-shrink-0 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Building className="h-3 w-3 text-primary" />
+                  </div>
+                  {currentUserSchoolName || "Your School"}
+                  <Lock className="h-3.5 w-3.5 ml-2 text-muted-foreground" />
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-10 items-center px-3 rounded-md border border-input bg-background">
+                <span className="text-sm text-destructive">
+                  You are not associated with any school
+                </span>
+              </div>
+            )}
+            
+            {!isSuperAdmin && (
+              <p className="text-xs text-muted-foreground">
+                You can only add staff to your assigned school.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -308,7 +575,15 @@ export function AddStaffModal({ isOpen, onClose }: AddStaffModalProps) {
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!staffEmail || !staffRole || !staffType || isSubmitting || isAddingRole}
+            disabled={
+              !staffEmail || 
+              !staffRole || 
+              !staffType || 
+              (isSuperAdmin && staffType === "admin" && !selectedSchool) ||
+              (!isSuperAdmin && !currentUserSchool) ||
+              isSubmitting || 
+              isAddingRole
+            }
           >
             {isSubmitting ? (
               <>
