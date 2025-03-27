@@ -221,9 +221,6 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
               accept="image/*"
               className="hidden"  
             />
-            <div className="text-xs text-muted-foreground text-center mt-1">
-              A QR code will be automatically generated for every school. If no logo is provided, the QR code will be used as the school logo.
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -291,9 +288,9 @@ export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="vpnConfig">VPN Configuration File (Optional) 
+            <Label htmlFor="vpnConfig">VPN Configuration File
             <span className="text-xs text-muted-foreground ms-4">
-              Upload a VPN configuration file (.ovpn) for school network access.
+             -  upload a VPN configuration file (.ovpn) for school network access.
             </span>
 
             </Label>

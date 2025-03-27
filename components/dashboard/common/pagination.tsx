@@ -49,7 +49,7 @@ export function Pagination({
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Show:</span>
           <Select
-            value={itemsPerPage.toString()}
+            value={itemsPerPage?.toString()}
             onValueChange={(value) => onLimitChange(Number(value))}
           >
             <SelectTrigger className="w-[70px] h-8">

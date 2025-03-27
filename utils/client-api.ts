@@ -208,8 +208,8 @@ export const fetchSchools = async ({
 }: FetchSchoolsParams = {}): Promise<SchoolsResponse> => {
   try {
     const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    params.append('page', page?.toString());
+    params.append('limit', limit?.toString());
     
     if (search) {
       params.append('search', search);
@@ -220,7 +220,7 @@ export const fetchSchools = async ({
       params.append('order', order);
     }
     
-    const response = await apiClient.get(`/schools?${params.toString()}`);
+    const response = await apiClient.get(`/schools?${params?.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Fetch schools error:', error);
@@ -283,8 +283,8 @@ export const fetchUsers = async ({
 }: FetchUsersParams = {}) => {
   try {
     const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    params.append('page', page?.toString());
+    params.append('limit', limit?.toString());
     
     if (search) {
       params.append('search', search);
@@ -299,7 +299,7 @@ export const fetchUsers = async ({
       params.append('order', order);
     }
     
-    const response = await apiClient.get(`/users/all?${params.toString()}`);
+    const response = await apiClient.get(`/users/all?${params?.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Fetch users error:', error);
