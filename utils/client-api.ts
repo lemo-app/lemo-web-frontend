@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { School } from './interface/school.types';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3001', // Replace with your API base URL
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   // headers: {
   //   'Content-Type': 'application/json',
   // },
