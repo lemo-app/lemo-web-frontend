@@ -71,12 +71,14 @@ export function AttendanceTable() {
         </Table>
       </div>
 
-      <Pagination
+      {/* <Pagination
         currentPage={currentPage}
         totalPages={Math.ceil(attendanceSummary.length / 10)}
         onPageChange={setCurrentPage}
         totalItems={attendanceSummary.length}
-      />
+        itemsPerPage={10}
+        onLimitChange={setItemsPerPage}
+      /> */}
 
       <WarningNoteModal
         isOpen={isWarningNoteModalOpen}

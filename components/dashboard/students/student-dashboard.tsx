@@ -227,12 +227,13 @@ export function StudentDashboard() {
             </Table>
           </div>
 
-          <Pagination
+          {/* <Pagination
             currentPage={currentPage}
             totalPages={Math.ceil(filteredStudents.length / 10)}
             onPageChange={setCurrentPage}
             totalItems={filteredStudents.length}
-          />
+            itemsPerPage={10}
+          /> */}
         </TabsContent>
 
         <TabsContent value="attendance" className="mt-4">
