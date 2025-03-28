@@ -101,12 +101,14 @@ export function ViolationsTable() {
         </Table>
       </CardContent>
       <div className="px-6">
-        <Pagination
+        {/* <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             totalItems={violations.length}
-          />
+            itemsPerPage={itemsPerPage}
+            onLimitChange={setItemsPerPage}
+          /> */}
       </div>
       
      
