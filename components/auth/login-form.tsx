@@ -9,7 +9,6 @@ import { login } from "@/utils/client-api";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { useUserStore } from "@/utils/store/user-store";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
@@ -46,10 +45,10 @@ export function LoginForm({
       }
 
       router.push("/dashboard");
-    } catch (error: AxiosError | any) {
+    } catch (error: any) {
       // console.error("Login failed:", error.response.data ?? error);
       toast.error(
-        error.response.data ?? "Something went wrong. Please try again."
+        error.response?.data ?? "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);

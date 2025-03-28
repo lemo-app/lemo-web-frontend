@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, ImageIcon } from "lucide-react";
+import { Download } from "lucide-react";
 import QrCodeIcon from '@/assets/images/dashboard/settings/qr-code.svg';
 import Image from "next/image";
 
