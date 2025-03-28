@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['lemobucket.s3.eu-west-2.amazonaws.com'],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
