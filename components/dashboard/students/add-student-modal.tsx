@@ -155,22 +155,22 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
         formData.roll_no,
         formData.gender,
         formData.age,
-        formData.school || userSchoolId
+        
       );
 
       if (response) {
+        // connect student to school
+        await connectUserToSchool(formData.email, formData.school)
+
         toast.success("Student added successfully");
         onSuccess?.();
         onClose();
       }
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as { response?: { data?: { message?: string } } };
-        toast.error(apiError.response?.data?.message || "Failed to add student");
-      } else {
-        toast.error("Failed to add student");
-      }
+      console.log('error:', error)
+      toast.error("Failed to add student");
     } finally {
+      queryClient.invalidateQueries({ queryKey: ['students'] })
       setIsSubmitting(false);
     }
   };

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,9 +42,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
   const [currentUserType, setCurrentUserType] = useState<string | null>(null)
   const schoolSearchInputRef = useRef<HTMLInputElement>(null)
 
- 
-  console.log('isSuperAdmin test:', userType)
-  // Fetch schools with search - only for super_admin users and when staff type is admin
+  // Fetch schools with search - only for super_admin users
   const { data: schoolsData, isLoading: schoolsLoading } = useQuery({
     queryKey: ['schools', { search: schoolSearch }],
     queryFn: () => fetchSchools({ 
@@ -53,37 +51,35 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
       sortBy: 'school_name',
       order: 'asc'
     }),
-    enabled: isOpen && userType === "super_admin" && staffType === "admin", // Only fetch when modal is open, user is super_admin, and type is admin
+    enabled: isOpen && userType === "super_admin", // Only fetch when modal is open and user is super_admin
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
-
-  const schools = schoolsData?.data?.schools || []
-
+  // console.log('schoolsData:', schoolsData)
+  const schools = useMemo(()=> schoolsData?.data?.schools || [], [schoolsData])
+  // console.log('schools:', schools)
   // Fetch current user's information and school
-  const fetchCurrentUserInfo = async () => {
+  const fetchCurrentUserInfo = useCallback(async () => {
     setIsLoadingUserData(true)
     try {
       const response = await apiClient.get('/users/me')
-      // console.log('response:', response.data)
-      // Store user type
+      console.log('response from fetchCurrentUserInfo: ', response.data)
       if (response.data?.type) {
-        console.log('response.data.type:', response.data.type)
         setCurrentUserType(response.data.type)
-        
-        // For non-super_admin users, always set staffType to school_manager
+        // Only set staffType for non-super_admin users
         if (response.data.type !== "super_admin") {
           setStaffType("school_manager")
         }
       }
-      
-      // Store user's school
+
+      // console.log('response.data.school:', response.data.school)
       if (response.data?.school) {
         setCurrentUserSchool(response.data.school)
-        
-        // If we have the school ID but not the name, try to get the school details
         if (response.data.school && !currentUserSchoolName) {
           try {
             const schoolResponse = await fetchSchools({ limit: 100 })
+
+            // console.log('schoolResponse:', schoolResponse)
+            
             const schoolData = schoolResponse.data?.schools?.find(
               (s: School) => s._id === response.data.school
             )
@@ -94,17 +90,18 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
             console.error("Error fetching school details:", schoolError)
           }
         }
-      } else if (currentUserType !== "super_admin") {
-        // Only show error for non-super_admin users
-        toast.error("You are not associated with any school. Please contact an administrator.")
       }
+      // else if (currentUserType !== "super_admin") {
+      //   // Only show this error for non-super_admin users
+      //   toast.error("You are not associated with any school. Please contact an administrator.")
+      // }
     } catch (err) {
-      console.error("Error fetching current user info:", err)
+      console.log("Error fetching current user info:", err)
       toast.error("Could not retrieve your user information.")
     } finally {
       setIsLoadingUserData(false)
     }
-  }
+  }, [currentUserSchoolName])
 
   // Load custom roles from localStorage on component mount
   useEffect(() => {
@@ -130,8 +127,8 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
     if (isOpen) {
       fetchCurrentUserInfo()
     }
-  }, [isOpen])
-
+  }, [isOpen, fetchCurrentUserInfo])
+  console.log('schoolSearch :', schoolSearch)
   // Focus school search input when school select opens
   useEffect(() => {
     if (schoolSelectOpen && schoolSearchInputRef.current) {
@@ -151,13 +148,13 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
     }
     
     // For non-super_admin users or school_manager type, we need to have a current user school
-    if ((staffType === "school_manager" || userType !== "super_admin") && !currentUserSchool) {
+    if (( currentUserType == 'school_manager' || currentUserType == 'admin') && !currentUserSchool) {
       toast.error("You are not associated with a school. Please contact an administrator.")
       return
     }
     
     // For super_admin users adding an admin, we need to have a selected school
-    if (userType === "super_admin" && staffType === "admin" && !selectedSchool) {
+    if (userType === "super_admin" && (staffType == 'admin' || staffType == 'school_manager') && !selectedSchool) {
       toast.error("Please select a school")
       return
     }
@@ -166,12 +163,12 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
     let schoolId: string
     let schoolName: string
     
-    if (userType !== "super_admin" || staffType === "school_manager") {
-      // Non-super_admin users or school_manager staff always use current user's school
+    if (userType !== "super_admin") {
+      // school_manager | admin staff always use current user's school
       schoolId = currentUserSchool!
       schoolName = currentUserSchoolName || "Your School"
     } else {
-      // Super admin adding an admin - use selected school
+      // Super admin adding school_manager | admin - use selected school
       schoolId = selectedSchool!._id
       schoolName = selectedSchool!.school_name
     }
@@ -257,11 +254,9 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
 
   // Handle school selection (only for super_admin)
   const handleSelectSchool = (school: School) => {
-    if (userType === "super_admin") {
-      setSelectedSchool(school)
-      setSchoolSelectOpen(false)
-      setSchoolSearch("")
-    }
+    setSelectedSchool(school)
+    setSchoolSelectOpen(false)
+    setSchoolSearch("")
   }
 
   // Handle staff type change (only for super_admin)
@@ -413,7 +408,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
           {/* School Selection - Different UI based on user type and staff type */}
           <div className="space-y-2">
             <Label htmlFor="school">
-              {userType === "super_admin" && staffType === "admin" ? "Select School" : "School"} 
+              {userType === "super_admin" ? "Select School" : "School"} 
               <span className="text-destructive">*</span>
             </Label>
             
@@ -422,8 +417,8 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
                 <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
                 <span className="text-sm text-muted-foreground">Loading your school...</span>
               </div>
-            ) : userType === "super_admin" && staffType === "admin" ? (
-              // School dropdown for super_admin when adding an admin
+            ) : userType === "super_admin" ? (
+              // School dropdown for super_admin for BOTH staff types
               <div className="relative">
                 <div
                   className={cn(
@@ -478,7 +473,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
                 )}
               </div>
             ) : currentUserSchool ? (
-              // Locked school display for non-super_admin or when staff type is school_manager
+              // Locked school display for non-super_admin
               <div className="flex h-10 items-center px-3 rounded-md border border-input bg-background">
                 <div className="flex items-center gap-2 text-sm">
                   <div className="flex-shrink-0 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center">

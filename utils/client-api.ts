@@ -43,48 +43,48 @@ export const signup = async (email: string, type: string, fullName?: string, job
     console.log('Signup response:', response.data);
     
     // If the user was created successfully, update additional fields
-    if (response.data && response.data.userId) {
-      const userId = response.data.userId;
+    // if (response.data && response.data.userId) {
+    //   const userId = response.data.userId;
 
-      const updateData: { 
-        full_name?: string; 
-        job_title?: string;
-        student_id?: string;
-        section?: string;
-        roll_no?: string;
-        gender?: string;
-        age?: string;
-      } = {};
+    //   const updateData: { 
+    //     full_name?: string; 
+    //     job_title?: string;
+    //     student_id?: string;
+    //     section?: string;
+    //     roll_no?: string;
+    //     gender?: string;
+    //     age?: string;
+    //   } = {};
 
-      if (fullName) updateData.full_name = fullName;
-      if (jobTitle) updateData.job_title = jobTitle;
-      if (student_id) updateData.student_id = student_id;
-      if (section) updateData.section = section;
-      if (roll_no) updateData.roll_no = roll_no;
-      if (gender) updateData.gender = gender;
-      if (age) updateData.age = age;
+    //   if (fullName) updateData.full_name = fullName;
+    //   if (jobTitle) updateData.job_title = jobTitle;
+    //   if (student_id) updateData.student_id = student_id;
+    //   if (section) updateData.section = section;
+    //   if (roll_no) updateData.roll_no = roll_no;
+    //   if (gender) updateData.gender = gender;
+    //   if (age) updateData.age = age;
 
-      // Update user profile
-      try {
-        await apiClient.patch(`/users/${userId}`, updateData);
-        console.log('User profile updated with additional fields');
-      } catch (updateError) {
-        console.warn('Could not update user profile fields:', updateError);
-      }
+    //   // Update user profile
+    //   try {
+    //     await apiClient.patch(`/users/${userId}`, updateData);
+    //     console.log('User profile updated with additional fields');
+    //   } catch (updateError) {
+    //     console.warn('Could not update user profile fields:', updateError);
+    //   }
 
-      // Connect the user to a school
-      if (schoolId) {
-        try {
-          await apiClient.post('/schools/connect', {
-            user_email: email,
-            school_id: schoolId
-          });
-          console.log('User connected to school successfully');
-        } catch (connectError) {
-          console.warn('Could not connect user to school:', connectError);
-        }
-      }
-    }
+    //   // Connect the user to a school
+    //   if (schoolId) {
+    //     try {
+    //       await apiClient.post('/schools/connect', {
+    //         user_email: email,
+    //         school_id: schoolId
+    //       });
+    //       console.log('User connected to school successfully');
+    //     } catch (connectError) {
+    //       console.warn('Could not connect user to school:', connectError);
+    //     }
+    //   }
+    // }
 
     return response.data;
   } catch (error) {

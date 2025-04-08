@@ -56,7 +56,6 @@ export default function ManageStaff() {
     staleTime: 1000 * 60 * 5, // 15 minutes
   });
 
-  console.log('userData heta :', userData)
   // Check user roles
   const isSuperAdmin = userData?.type === 'super_admin';
   // console.log(isSuperAdmin)
