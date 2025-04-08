@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/ui/button";
 import { Download, Plus } from "lucide-react";
 import React, { useState } from "react";
@@ -5,6 +7,8 @@ import { AddSchoolModal } from "../schools/add-school-modal";
 import { AddStudentModal } from "../students/add-student-modal";
 import { AddStaffModal } from "../staff/add-staff-modal";
 import { InviteAdminModal } from "../admins/invite-admin-modal";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "@/utils/client-api";
 
 interface HeaderWithButtonsLinksProps {
   title: string;
@@ -17,11 +21,24 @@ const HeaderWithButtonsLinks = ({
   modalTitle,
   onModalOpen
 }: HeaderWithButtonsLinksProps) => {
+   // Fetch current user information
+  const { 
+    data: userData, 
+    isLoading: isLoadingUser, 
+    isError: isUserError 
+  } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await apiClient.get('/users/me');
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
-
 
   return (
     <div className="flex items-center justify-between">
@@ -60,21 +77,25 @@ const HeaderWithButtonsLinks = ({
       </div>
 
       {/* Only render the modals if no custom handler is provided */}
-      {!onModalOpen && (
+      {!onModalOpen && userData?.type && (
         <>
           <AddSchoolModal
+            userType={userData?.type}
             isOpen={isAddModalOpen}
             onClose={() => setIsAddModalOpen(false)}
           />
           <AddStudentModal
+            userType={userData?.type}
             isOpen={isAddStudentModalOpen}
             onClose={() => setIsAddStudentModalOpen(false)}
           />
           <InviteAdminModal
+            userType={userData?.type}
             isOpen={isAddAdminModalOpen}
             onClose={() => setIsAddAdminModalOpen(false)}
           />
           <AddStaffModal
+            userType={userData?.type}
             isOpen={isAddStaffModalOpen}
             onClose={() => setIsAddStaffModalOpen(false)}
           />

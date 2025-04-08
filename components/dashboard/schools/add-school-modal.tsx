@@ -21,9 +21,10 @@ import { useQueryClient } from "@tanstack/react-query"
 interface AddSchoolModalProps {
   isOpen: boolean
   onClose: () => void
+  userType: string
 }
 
-export function AddSchoolModal({ isOpen, onClose }: AddSchoolModalProps) {
+export function AddSchoolModal({ isOpen, onClose, userType }: AddSchoolModalProps) {
   const queryClient = useQueryClient()
   const [schoolName, setSchoolName] = useState("")
   const [address, setAddress] = useState("")

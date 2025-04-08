@@ -1,310 +1,348 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
+import { Loader2} from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import apiClient, { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserProfile } from "@/utils/client-api"
+import { User as UserType } from "@/utils/interface/user.types"
 
-interface AddStudentModalProps {
-  isOpen: boolean
-  onClose: () => void
+// Extend the UserType to include student-specific fields
+
+// Current user interface
+interface CurrentUser extends UserType {
+  type: 'super_admin' | 'admin' | 'school_manager';
+  school_name?: string;
+  school?: string;
 }
 
-export function AddStudentModal({ isOpen, onClose }: AddStudentModalProps) {
-  const [showStep1, setShowStep1] = useState(true)
-  const [showStep2, setShowStep2] = useState(false)
+// School interface is now imported from school.types.ts
+
+interface AddStudentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  userType: string
+}
+
+export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStudentModalProps) {
+  const queryClient = useQueryClient();
+  // Form state
   const [formData, setFormData] = useState({
-    name: "",
-    studentId: "",
     email: "",
-    phone: "",
+    full_name: "",
+    student_id: "",
+    section: "",
+    school: "",
+    roll_no: "",
     gender: "",
-    gradeSection: "",
-    primaryGuardianName: "",
-    primaryGuardianContact: "",
-    permanentAddress: "",
-    currentAddress: "",
-    emergencyContact: "",
-    emergencyAddress: "",
-  })
+    age: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  // Fetch current user information
+  const { 
+    data: userData, 
+    isLoading: isLoadingUser, 
+    isError: isUserError 
+  } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await apiClient.get('/users/me');
+      return response.data as CurrentUser;
+    },
+    staleTime: 1000 * 60 * 15, // 15 minutes
+  });
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  // Check user roles
+  const isSuperAdmin = userData?.type === 'super_admin';
+  const userSchoolId = userData?.school;
+  const userSchoolName = userData?.school_name || "Your School";
 
-  const handleNext = () => {
-    setShowStep1(false)
-    setShowStep2(true)
-  }
+  // Fetch schools for super admin
+  const { 
+    data: schoolsResponse, 
+    isLoading: isLoadingSchools 
+  } = useQuery({
+    queryKey: ['schools', userData],
+    queryFn: () => fetchSchools({
+      limit: 100, // Get all schools
+      sortBy: 'school_name',
+      order: 'asc'
+    }),
+    enabled: isSuperAdmin, // Only fetch schools for super admin
+    staleTime: 1000 * 60 * 15, // 15 minutes
+  });
 
-  const handleBack = () => {
-    setShowStep1(true)
-    setShowStep2(false)
-  }
+  // Memoize the schoolsData to prevent unnecessary re-renders
+  const schoolsData = useMemo(() => schoolsResponse?.data?.schools || [], [schoolsResponse]);
 
-  const handleCancel = () => {
-    resetAndClose()
-  }
+  // Log schools data for debugging
+  useEffect(() => {
+    if (schoolsData.length > 0) {
+      console.log('Schools data:', schoolsData);
+    }
+  }, [schoolsData]);
 
-  const resetAndClose = () => {
-    onClose()
-    // Reset state after a short delay to prevent visual glitches
-    setTimeout(() => {
-      setShowStep1(true)
-      setShowStep2(false)
+  // Section options
+  const sections = [
+    { value: '10/A', label: '10/A' },
+    { value: '9/B', label: '9/B' },
+    { value: '8/C', label: '8/C' },
+  ];
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
       setFormData({
-        name: "",
-        studentId: "",
         email: "",
-        phone: "",
+        full_name: "",
+        student_id: "",
+        section: "",
+        school: isSuperAdmin ? "" : userSchoolId || "",
+        roll_no: "",
         gender: "",
-        gradeSection: "",
-        primaryGuardianName: "",
-        primaryGuardianContact: "",
-        permanentAddress: "",
-        currentAddress: "",
-        emergencyContact: "",
-        emergencyAddress: "",
-      })
-    }, 300)
-  }
+        age: "",
+      });
+    }
+  }, [isOpen, isSuperAdmin, userSchoolId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-    console.log(formData)
-    resetAndClose()
-  }
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  // Only show the dialog if isOpen is true and either step1 or step2 is active
-  const shouldShowDialog = isOpen && (showStep1 || showStep2)
+  // Handle select change
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Validate required fields
+    if (!formData.email) {
+      toast.error("Email is required");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Create student user using the signup function with type='student'
+      const response = await signup(
+        formData.email,
+        'student',
+        formData.full_name,
+        undefined, // jobTitle is not needed
+        formData.student_id,
+        formData.section,
+        formData.roll_no,
+        formData.gender,
+        formData.age,
+        formData.school || userSchoolId
+      );
+
+      if (response) {
+        toast.success("Student added successfully");
+        onSuccess?.();
+        onClose();
+      }
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { data?: { message?: string } } };
+        toast.error(apiError.response?.data?.message || "Failed to add student");
+      } else {
+        toast.error("Failed to add student");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Loading state
+  const isLoading = isLoadingUser || (isSuperAdmin && isLoadingSchools);
+
+  // Error state
+  if (isUserError) {
+    toast.error('Failed to load user information');
+  }
 
   return (
-    <>
-      {shouldShowDialog && (
-        <Dialog open={true} onOpenChange={resetAndClose}>
-          <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-            <DialogHeader className="p-6 pb-2 flex flex-row items-center justify-between">
-              <DialogTitle className="text-xl font-semibold">
-                {showStep1 ? "Add Students" : "Add Students Information"}
-              </DialogTitle>
-            </DialogHeader>
-
-            {showStep1 && (
-              <div className="p-6 pt-2">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <label htmlFor="name" className="text-sm font-medium">
-                      Name
-                    </label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Type name here..."
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="studentId" className="text-sm font-medium">
-                      Student ID
-                    </label>
-                    <Input
-                      id="studentId"
-                      name="studentId"
-                      placeholder="Type ID here..."
-                      value={formData.studentId}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="email" className="text-sm font-medium">
-                      Email
-                    </label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="Type email here..."
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="phone" className="text-sm font-medium">
-                      Phone
-                    </label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      placeholder="Type phone here..."
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="gender" className="text-sm font-medium">
-                      Gender
-                    </label>
-                    <Select value={formData.gender} onValueChange={(value) => handleSelectChange("gender", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a gender..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="gradeSection" className="text-sm font-medium">
-                      Grade/Section
-                    </label>
-                    <Select
-                      value={formData.gradeSection}
-                      onValueChange={(value) => handleSelectChange("gradeSection", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a grade..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10/A">10/A</SelectItem>
-                        <SelectItem value="9/B">9/B</SelectItem>
-                        <SelectItem value="8/C">8/C</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex justify-between mt-4">
-                    <Button type="button" variant="outline" onClick={handleCancel} className="px-6">
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleNext}
-                      className="bg-gray-900 text-white hover:bg-gray-800 px-6"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Add Student</DialogTitle>
+          <DialogDescription>
+            Add a new student to the system. They will receive an invitation email to set up their account.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="student@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
-            )}
-
-            {showStep2 && (
-              <form onSubmit={handleSubmit} className="p-6 pt-2">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <label htmlFor="primaryGuardianName" className="text-sm font-medium">
-                      Primary Guardian Name (optional)
-                    </label>
-                    <Input
-                      id="primaryGuardianName"
-                      name="primaryGuardianName"
-                      placeholder="Type name here..."
-                      value={formData.primaryGuardianName}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="primaryGuardianContact" className="text-sm font-medium">
-                      Primary Guardian Contact Number (optional)
-                    </label>
-                    <Input
-                      id="primaryGuardianContact"
-                      name="primaryGuardianContact"
-                      placeholder="Type number here..."
-                      value={formData.primaryGuardianContact}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="permanentAddress" className="text-sm font-medium">
-                      Permanent Address (optional)
-                    </label>
-                    <Input
-                      id="permanentAddress"
-                      name="permanentAddress"
-                      placeholder="Type address here..."
-                      value={formData.permanentAddress}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="currentAddress" className="text-sm font-medium">
-                      Current Address (optional)
-                    </label>
-                    <Input
-                      id="currentAddress"
-                      name="currentAddress"
-                      placeholder="Type address here..."
-                      value={formData.currentAddress}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="emergencyContact" className="text-sm font-medium">
-                      Emergency Contact Number (optional)
-                    </label>
-                    <Input
-                      id="emergencyContact"
-                      name="emergencyContact"
-                      placeholder="Type emergency contact here..."
-                      value={formData.emergencyContact}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <label htmlFor="emergencyAddress" className="text-sm font-medium">
-                      Emergency Address (optional)
-                    </label>
-                    <Input
-                      id="emergencyAddress"
-                      name="emergencyAddress"
-                      placeholder="Type address here..."
-                      value={formData.emergencyAddress}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="flex justify-between mt-4">
-                    <Button type="button" variant="outline" onClick={handleBack} className="px-6">
-                      Back
-                    </Button>
-                    <Button type="submit" className="bg-gray-900 text-white hover:bg-gray-800 px-6">
-                      Submit
-                    </Button>
+              <div className="grid gap-2">
+                <Label htmlFor="full_name">Full Name *</Label>
+                <Input
+                  id="full_name"
+                  name="full_name"
+                  placeholder="John Doe"
+                  value={formData.full_name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="student_id">Student ID *</Label>
+                <Input
+                  id="student_id"
+                  name="student_id"
+                  placeholder="STU123"
+                  value={formData.student_id}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="roll_no">Roll Number</Label>
+                <Input
+                  id="roll_no"
+                  name="roll_no"
+                  placeholder="Roll number"
+                  value={formData.roll_no}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="section">Section *</Label>
+                <Select
+                  value={formData.section}
+                  onValueChange={(value) => handleSelectChange('section', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sections.map((section) => (
+                      <SelectItem key={section.value} value={section.value}>
+                        {section.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select
+                  value={formData.gender}
+                  onValueChange={(value) => handleSelectChange('gender', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  name="age"
+                  type="number"
+                  placeholder="Age"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                />
+              </div>
+              
+              {isSuperAdmin && (
+                <div className="grid gap-2">
+                  <Label htmlFor="school">School *</Label>
+                  <Select
+                    value={formData.school}
+                    onValueChange={(value) => handleSelectChange('school', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select school" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schoolsData.map((school) => (
+                        <SelectItem key={school._id} value={school._id}>
+                          {school.school_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {!isSuperAdmin && userSchoolId && (
+                <div className="grid gap-2">
+                  <Label>School</Label>
+                  <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm">
+                    <span>{userSchoolName}</span>
                   </div>
                 </div>
-              </form>
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
-  )
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading || isSubmitting}>
+              {isLoading || isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                "Add Student"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 

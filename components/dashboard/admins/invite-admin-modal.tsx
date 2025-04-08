@@ -11,10 +11,11 @@ import { toast } from "sonner"
 
 interface InviteAdminModalProps {
   isOpen: boolean
-  onClose: () => void
+  onClose: () => void;
+  userType: string
 }
 
-export function InviteAdminModal({ isOpen, onClose }: InviteAdminModalProps) {
+export function InviteAdminModal({ isOpen, onClose, userType }: InviteAdminModalProps) {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)

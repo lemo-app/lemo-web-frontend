@@ -53,13 +53,14 @@ export default function ManageStaff() {
       const response = await apiClient.get('/users/me');
       return response.data as CurrentUser;
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 5, // 15 minutes
   });
 
+  console.log('userData heta :', userData)
   // Check user roles
   const isSuperAdmin = userData?.type === 'super_admin';
-  console.log(isSuperAdmin)
-  console.log(userData)
+  // console.log(isSuperAdmin)
+  // console.log(userData)
 
   const userSchoolId = userData?.school;
   const userSchoolName = userData?.school_name || "Your School";

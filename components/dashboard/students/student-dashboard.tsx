@@ -13,7 +13,6 @@ import { students } from "@/lib/data"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format } from "date-fns"
-import { Pagination } from "../common/pagination"
 import { AttendanceTable } from "./attendance-table"
 import { WarningNoteModal } from "./warning-note-modal"
 import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 

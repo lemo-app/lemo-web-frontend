@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Loader2, UserCog } from "lucide-react"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import { format, parseISO } from "date-fns"
-import { fetchUsers, FetchUsersParams } from "@/utils/client-api"
+import apiClient, { fetchUsers, FetchUsersParams } from "@/utils/client-api"
 import { User } from "@/utils/interface/user.types"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
@@ -23,7 +23,20 @@ export default function ManageAdmins() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   
   const queryClient = useQueryClient()
-  
+
+  // Fetch current user information
+  const { 
+    data: userData, 
+    isLoading: isLoadingUser, 
+    isError: isUserError 
+  } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await apiClient.get('/users/me');
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
   // Build query parameters for React Query
   const buildQueryParams = (): FetchUsersParams => {
     return {
@@ -211,6 +224,7 @@ export default function ManageAdmins() {
       <InviteAdminModal
         isOpen={isInviteModalOpen}
         onClose={handleCloseInviteModal}
+        userType={userData?.type}
       />
     </div>
   )
