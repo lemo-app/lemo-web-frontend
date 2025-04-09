@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import React, { useState } from "react";
 import { AddSchoolModal } from "../schools/add-school-modal";
 import { AddStudentModal } from "../students/add-student-modal";

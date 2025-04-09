@@ -17,6 +17,7 @@ import Image from "next/image"
 import apiClient from "@/utils/client-api"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import ViewStudentModal from "@/components/dashboard/students/view-student-modal"
+import EditStudentModal from '@/components/dashboard/students/edit-student-modal'
 
 // Extend the UserType to include student-specific fields
 interface Student extends UserType {
@@ -52,6 +53,9 @@ export default function ManageStudents() {
   // View student modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  
+  // Edit student modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   
   // Fetch current user information
   const { 
@@ -219,9 +223,8 @@ export default function ManageStudents() {
 
   // Handle edit student
   const handleEditStudent = (student: Student) => {
-    toast.info(`Edit ${student.full_name || student.email}`, {
-      description: "Edit student functionality coming soon"
-    });
+    setSelectedStudent(student);
+    setIsEditModalOpen(true);
   };
 
   // Handle delete student confirmation
@@ -511,6 +514,14 @@ export default function ManageStudents() {
         onClose={() => setIsViewModalOpen(false)}
         student={selectedStudent}
       />
+
+      {/* Edit Student Modal */}
+      {isEditModalOpen && (
+        <EditStudentModal
+          student={selectedStudent}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      )}
     </div>
   )
 }
