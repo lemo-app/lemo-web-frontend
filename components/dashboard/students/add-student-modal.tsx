@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { Loader2} from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import apiClient, { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserProfile } from "@/utils/client-api"
+import apiClient, { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserProfile, updateUserInfo } from "@/utils/client-api"
 import { User as UserType } from "@/utils/interface/user.types"
 
 // Extend the UserType to include student-specific fields
@@ -149,19 +149,21 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
         formData.email,
         'student',
         formData.full_name,
-        undefined, // jobTitle is not needed
-        formData.student_id,
-        formData.section,
-        formData.roll_no,
-        formData.gender,
-        formData.age,
-        
       );
-
+      console.log('response signup:', response)  
       if (response) {
         // connect student to school
         await connectUserToSchool(formData.email, formData.school)
-
+        // update user info
+        const userInfo = {
+          student_id: formData.student_id,
+          roll_no: formData.roll_no,
+          section: formData.section,
+          gender: formData.gender,
+          age: formData.age,
+        }
+        await updateUserInfo(userInfo, response.userId)
+          
         toast.success("Student added successfully");
         onSuccess?.();
         onClose();

@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-export const signup = async (email: string, type: string, fullName?: string, jobTitle?: string, student_id?: string, section?: string, roll_no?: string, gender?: string, age?: string, schoolId?: string) => {
+export const signup = async (email: string, type: string, fullName?: string, jobTitle?: string) => {
   try {
     const data: {
       email: string;
@@ -40,7 +40,7 @@ export const signup = async (email: string, type: string, fullName?: string, job
     console.log('Signup data being sent:', JSON.stringify(data));
 
     const response = await apiClient.post('/auth/signup', data);
-    console.log('Signup response:', response.data);
+    // console.log('Signup response:', response.data);
     
     // If the user was created successfully, update additional fields
     // if (response.data && response.data.userId) {
@@ -107,6 +107,7 @@ export const connectStaffToSchool = async (userEmail: string, schoolId: string) 
   }
 };
 
+// Login
 export const login = async (email: string, password: string) => {
   try {
     const response = await apiClient.post('/auth/login', {
@@ -121,6 +122,7 @@ export const login = async (email: string, password: string) => {
   }
 };
 
+// Verify email
 export const verifyEmail = async (email: string, tempPassword: string, newPassword: string, newPasswordConfirm: string) => {
   try {
     const response = await apiClient.post('/verify-email', {
@@ -132,6 +134,27 @@ export const verifyEmail = async (email: string, tempPassword: string, newPasswo
     return response.data;
   } catch (error) {
     console.error('Verify email error:', error);
+    throw error;
+  }
+};
+
+
+// update user info
+type UserInfo = {
+  student_id?: string;
+  roll_no?: string;
+  section?: string;
+  gender?: string;
+  age?: string;
+}
+
+
+export const updateUserInfo = async (userInfo: UserInfo, user_id: string) => {
+  try {
+    const response = await apiClient.patch(`/users/${user_id}`, userInfo);
+    return response.data;
+  } catch (error) {
+    console.error('Update user info error:', error);
     throw error;
   }
 };
