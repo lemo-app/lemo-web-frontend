@@ -128,7 +128,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
       fetchCurrentUserInfo()
     }
   }, [isOpen, fetchCurrentUserInfo])
-  console.log('schoolSearch :', schoolSearch)
+  // console.log('schoolSearch :', schoolSearch)
   // Focus school search input when school select opens
   useEffect(() => {
     if (schoolSelectOpen && schoolSearchInputRef.current) {

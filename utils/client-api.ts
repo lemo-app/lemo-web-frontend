@@ -325,6 +325,17 @@ export const fetchUsers = async ({
   }
 };
 
+// Delete a user by ID
+export const deleteUser = async (userId: string) => {
+  try {
+    const response = await apiClient.delete(`/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Delete user error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 

@@ -9,20 +9,19 @@ import { ArrowUpDown, ChevronDown, Edit, Eye, Loader2, Search, Trash2, User, Inf
 import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import HeaderWithButtonsLinks from "@/components/dashboard/common/header-with-buttons-links"
-import { fetchUsers, FetchUsersParams } from "@/utils/client-api"
+import { fetchUsers, FetchUsersParams, deleteUser } from "@/utils/client-api"
 import { toast } from "sonner"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { User as UserType } from "@/utils/interface/user.types"
 import Image from "next/image"
-import { format, parseISO } from 'date-fns'
 import apiClient from "@/utils/client-api"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import ViewStudentModal from "@/components/dashboard/students/view-student-modal"
 
 // Extend the UserType to include student-specific fields
 interface Student extends UserType {
-  student_id?: string;
-  section?: string;
-  school?: string;
   school_name?: string;
+  school?: string;
 }
 
 // Current user interface
@@ -36,6 +35,7 @@ interface CurrentUser extends UserType {
 type SortOption = 'nameAsc' | 'nameDesc' | 'emailAsc' | 'emailDesc' | 'dateAsc' | 'dateDesc' | 'none';
 
 export default function ManageStudents() {
+  const queryClient = useQueryClient();
   // State for filtering and pagination
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -43,6 +43,15 @@ export default function ManageStudents() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [sortOption, setSortOption] = useState<SortOption>('none')
   const [sectionFilter, setSectionFilter] = useState<string>('')
+  
+  // Delete confirmation dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  // View student modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   
   // Fetch current user information
   const { 
@@ -136,7 +145,7 @@ export default function ManageStudents() {
   const students = (data?.data?.users || []) as Student[];
   const totalItems = data?.data?.totalUsers || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  
+  console.log(students)
   // Effect for debouncing search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -204,9 +213,8 @@ export default function ManageStudents() {
 
   // Handle view student details
   const handleViewStudentDetails = (student: Student) => {
-    toast.info(`View details for ${student.full_name || student.email}`, {
-      description: "Student details functionality coming soon"
-    });
+    setSelectedStudent(student);
+    setIsViewModalOpen(true);
   };
 
   // Handle edit student
@@ -218,18 +226,44 @@ export default function ManageStudents() {
 
   // Handle delete student confirmation
   const handleDeleteStudent = (student: Student) => {
-    toast.info(`Delete ${student.full_name || student.email}`, {
-      description: "Delete student functionality coming soon"
-    });
+    setStudentToDelete(student);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Confirm and process student deletion
+  const confirmDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteUser(studentToDelete._id);
+      toast.success(`${studentToDelete.full_name || studentToDelete.email} has been deleted successfully`);
+      
+      // Invalidate and refetch the students query
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast.error("Failed to delete student. Please try again.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setStudentToDelete(null);
+    }
+  };
+
+  // Cancel delete operation
+  const cancelDeleteStudent = () => {
+    setIsDeleteDialogOpen(false);
+    setStudentToDelete(null);
   };
 
   // Section options for dropdown filter
-  const sections = [
-    { value: '', label: 'All Sections' },
-    { value: '10/A', label: '10/A' },
-    { value: '9/B', label: '9/B' },
-    { value: '8/C', label: '8/C' },
-  ];
+  // const sections = [
+  //   { value: '', label: 'All Sections' },
+  //   { value: '10/A', label: '10/A' },
+  //   { value: '9/B', label: '9/B' },
+  //   { value: '8/C', label: '8/C' },
+  // ];
 
   // Handle error
   if (isUserError) {
@@ -253,8 +287,8 @@ export default function ManageStudents() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="relative w-80 bg-white">
+      <div className="flex items-center justify-between gap-2">
+        <div className="relative w-full bg-white">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input 
             placeholder="Search by name or email..." 
@@ -274,7 +308,7 @@ export default function ManageStudents() {
           )}
           
           {/* Section filter dropdown */}
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 {sectionFilter ? sections.find(s => s.value === sectionFilter)?.label || 'Section' : 'Section'}
@@ -291,7 +325,7 @@ export default function ManageStudents() {
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           {/* Sort options dropdown */}
           <DropdownMenu>
@@ -440,6 +474,43 @@ export default function ManageStudents() {
           onLimitChange={handleLimitChange}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {studentToDelete?.full_name || studentToDelete?.email}? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeleteStudent} disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteStudent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* View Student Modal */}
+      <ViewStudentModal 
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        student={selectedStudent}
+      />
     </div>
   )
 }
