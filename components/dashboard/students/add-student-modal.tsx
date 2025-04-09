@@ -148,14 +148,14 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
       const response = await signup(
         formData.email,
         'student',
-        formData.full_name,
       );
-      console.log('response signup:', response)  
+      
       if (response) {
         // connect student to school
         await connectUserToSchool(formData.email, formData.school)
         // update user info
         const userInfo = {
+          full_name: formData.full_name,
           student_id: formData.student_id,
           roll_no: formData.roll_no,
           section: formData.section,

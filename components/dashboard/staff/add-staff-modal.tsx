@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, Loader2, Search, School as SchoolIcon, Building, Lock } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { connectStaffToSchool as connectUserToSchool, signup, fetchSchools } from "@/utils/client-api"
+import { connectStaffToSchool as connectUserToSchool, signup, fetchSchools, updateUserInfo } from "@/utils/client-api"
 import { toast } from "sonner"
 import { School } from "@/utils/interface/school.types"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -177,16 +177,20 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
     setError("")
     
     try {
-      await signup(
+      const signupResponse = await signup(
         staffEmail, 
         staffType, 
-        staffName,
         staffRole
       );
+      const user_id = signupResponse.userId;
       
       // Connect the staff to the appropriate school
       await connectUserToSchool(staffEmail, schoolId)
       
+      const userInfo = {
+        full_name: staffName,
+      }
+      await updateUserInfo(userInfo, user_id)
       // Notify success
       toast.success(`Staff member ${staffName || staffEmail} added successfully to ${schoolName}!`)
       
