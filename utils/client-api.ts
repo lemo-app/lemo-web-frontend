@@ -336,6 +336,16 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
+export const fetchCurrentUser = async () => {
+  try {
+    const response = await apiClient.get('/users/me');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 

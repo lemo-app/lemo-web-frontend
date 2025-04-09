@@ -1,14 +1,14 @@
 'use client'
 
 import { Button } from "@/components/ui/button";
-import { Download, Plus } from "lucide-react";
+import { Download, Loader2, Plus } from "lucide-react";
 import React, { useState } from "react";
 import { AddSchoolModal } from "../schools/add-school-modal";
 import { AddStudentModal } from "../students/add-student-modal";
 import { AddStaffModal } from "../staff/add-staff-modal";
 import { InviteAdminModal } from "../admins/invite-admin-modal";
 import { useQuery } from "@tanstack/react-query";
-import apiClient from "@/utils/client-api";
+import { fetchCurrentUser } from "@/utils/client-api";
 
 interface HeaderWithButtonsLinksProps {
   title: string;
@@ -24,14 +24,11 @@ const HeaderWithButtonsLinks = ({
    // Fetch current user information
   const { 
     data: userData, 
-    isLoading: isLoadingUser, 
-    isError: isUserError 
+    // isLoading: isLoadingUser, 
+    // isError: isUserError 
   } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: async () => {
-      const response = await apiClient.get('/users/me');
-      return response.data;
-    },
+    queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -76,7 +73,7 @@ const HeaderWithButtonsLinks = ({
         </Button>
       </div>
 
-      {/* Only render the modals if no custom handler is provided */}
+      {/* Add modals */}
       {!onModalOpen && userData?.type && (
         <>
           <AddSchoolModal

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { Loader2, Upload, Image as ImageIcon, X, Plus, Trash2 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import apiClient, { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserProfile, updateUserInfo, uploadFile } from "@/utils/client-api"
+import apiClient, { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserInfo, uploadFile } from "@/utils/client-api"
 import { User as UserType } from "@/utils/interface/user.types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
