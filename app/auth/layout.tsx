@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import logo from '@/assets/images/dashboard/common/logo.svg';
 import authImg from '@/assets/images/auth/dashboard.png' 
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -10,9 +9,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="flex justify-center gap-2 md:justify-start">
           <Link href="/" className="flex items-center gap-2 font-medium">
             <Image
-              src={logo.src}
-              width={200}
-              height={200}
+              src={'https://lemobucket.s3.eu-west-2.amazonaws.com/6.png'}
+              width={120}
+              height={100}
               alt="logo"
             />
           </Link>

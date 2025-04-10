@@ -12,6 +12,8 @@ import { verifyEmail } from "@/utils/client-api"
 import { toast } from "sonner"
 import logo from "@/assets/images/dashboard/common/logo.svg"
 import Image from "next/image"
+import { AlertDialog } from "@/components/ui/alert-dialog"
+import { AlertDialogDemo } from "@/components/auth/alert-dialog-verification"
 
 const VerifyEmail = () => {
   const router = useRouter()
@@ -65,11 +67,8 @@ const VerifyEmail = () => {
     <div className="container mx-auto max-w-2xl py-12">
       <div className="bg-white p-2 md:p-8 rounded-lg shadow-md border border-gray-100">
         <div className="flex justify-start items-start w-full flex-col">
-          <Image src={logo || "/placeholder.svg"} width={200} height={20} alt="logo" />
-          <h1 className="text-md mt-6 font-bold mb-6 text-center flex gap-2">
-            {" "}
-            <AlertCircle className="size-6" /> <span>Please Verify Your Email </span>
-          </h1>
+          <Image src={"https://lemobucket.s3.eu-west-2.amazonaws.com/6.png"} width={200} height={20} alt="logo" />
+          <AlertDialogDemo />
         </div>
         {emailMissing ? (
           <div className="p-6 bg-red-50 border border-red-200 rounded-lg">

@@ -12,14 +12,14 @@ import {
   School,
   ChevronRight,
   LogOut,
-  Info,
+  AlertCircleIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
-import logo from "@/assets/images/dashboard/common/logo.svg"
-import { useUserStore } from "@/utils/store/user-store"
+// import logo from "@/assets/images/dashboard/common/logo.svg"
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useUserStore } from "@/utils/store/user-store"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Create a sidebar state for global use
@@ -128,8 +128,8 @@ export default function Sidebar() {
         <div className="flex items-center gap-2 w-full">
           {!isCollapsed && (
             <Image
-              src={logo || "/placeholder.svg"}
-              width={160}
+              src={"https://lemobucket.s3.eu-west-2.amazonaws.com/6.png"}
+              width={100}
               height={20}
               alt="logo"
               className="transition-opacity duration-300"
@@ -137,8 +137,14 @@ export default function Sidebar() {
           )}
           {isCollapsed && (
             <div className="mx-auto">
-              <div className="h-8 w-8 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold">
-                L
+              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold">
+                <Image
+                  src={"https://lemobucket.s3.eu-west-2.amazonaws.com/lemtrans.png"}
+                  width={100}
+                  height={20}
+                  alt="logo"
+                  className="transition-opacity duration-300"
+                />
               </div>
             </div>
           )}
@@ -209,7 +215,7 @@ export default function Sidebar() {
 
           {!isCollapsed && (
             <div className="flex-1 min-w-0 flex items-center gap-2">
-              <Info className="h-4 w-4" />
+              <AlertCircleIcon className="h-4 w-4" />
               <p className="text-sm font-medium text-gray-900 truncate">{ "Logout From LEMO"}</p>
             </div>
           )}
