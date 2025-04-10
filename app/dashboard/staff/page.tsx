@@ -16,6 +16,10 @@ import { User as UserType } from "@/utils/interface/user.types"
 import Image from "next/image"
 import { format, parseISO } from 'date-fns'
 import apiClient from "@/utils/client-api"
+import ViewStaffModal from "@/components/dashboard/staff/view-staff-modal"
+import EditStaffModal from "@/components/dashboard/staff/edit-staff-modal"
+import DeleteStaffModal from "@/components/dashboard/staff/delete-staff-modal"
+import { AddStaffModal } from "@/components/dashboard/staff/add-staff-modal"
 
 // Extend the UserType to include job_title which is returned from the API
 interface StaffMember extends UserType {
@@ -41,6 +45,13 @@ export default function ManageStaff() {
   const [sortOption, setSortOption] = useState<SortOption>('none')
   const [jobTitleFilter, setJobTitleFilter] = useState<string>('')
   const [staffType, setStaffType] = useState<'school_manager' | 'admin'>('school_manager')
+  
+  // Modal state for staff operations
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   
   // Fetch current user information
   const { 
@@ -211,35 +222,69 @@ export default function ManageStaff() {
     );
   };
 
+  // Handle opening the add modal
+  const handleOpenAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+
+  // Handle closing the add modal
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
   // Handle view staff details
   const handleViewStaffDetails = (staffMember: StaffMember) => {
-    toast.info(`View details for ${staffMember.full_name || staffMember.email}`, {
-      description: "Staff details functionality coming soon"
-    });
+    setSelectedStaff(staffMember);
+    setIsViewModalOpen(true);
+  };
+
+  // Handle closing the view modal
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    // Clear the selected staff after a short delay to avoid UI flicker
+    setTimeout(() => {
+      setSelectedStaff(null);
+    }, 300);
   };
 
   // Handle edit staff
   const handleEditStaff = (staffMember: StaffMember) => {
-    toast.info(`Edit ${staffMember.full_name || staffMember.email}`, {
-      description: "Edit staff functionality coming soon"
-    });
+    setSelectedStaff(staffMember);
+    setIsEditModalOpen(true);
+  };
+
+  // Handle closing the edit modal
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    // Clear the selected staff after a short delay to avoid UI flicker
+    setTimeout(() => {
+      setSelectedStaff(null);
+    }, 300);
   };
 
   // Handle delete staff confirmation
   const handleDeleteStaff = (staffMember: StaffMember) => {
-    toast.info(`Delete ${staffMember.full_name || staffMember.email}`, {
-      description: "Delete staff functionality coming soon"
-    });
+    setSelectedStaff(staffMember);
+    setIsDeleteModalOpen(true);
   };
 
-  // Job title options for dropdown filter
-  const jobTitles = [
-    { value: '', label: 'All Titles' },
-    { value: 'teacher', label: 'Teacher' },
-    { value: 'principal', label: 'Principal' },
-    { value: 'coordinator', label: 'Coordinator' },
-    { value: 'support', label: 'Support Staff' },
-  ];
+  // Handle closing the delete modal
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    // Clear the selected staff after a short delay to avoid UI flicker
+    setTimeout(() => {
+      setSelectedStaff(null);
+    }, 300);
+  };
+
+  // // Job title options for dropdown filter
+  // const jobTitles = [
+  //   { value: '', label: 'All Titles' },
+  //   { value: 'teacher', label: 'Teacher' },
+  //   { value: 'principal', label: 'Principal' },
+  //   { value: 'coordinator', label: 'Coordinator' },
+  //   { value: 'support', label: 'Support Staff' },
+  // ];
 
   // Staff type options for dropdown
   const staffTypes = [
@@ -259,7 +304,11 @@ export default function ManageStaff() {
   return (
     <div className="space-y-6">
       {/* Header with button */}
-      <HeaderWithButtonsLinks title={getPageTitle()} modalTitle="Add Staff" />
+      <HeaderWithButtonsLinks 
+        title={getPageTitle()} 
+        modalTitle="Add Staff"
+        onModalOpen={handleOpenAddModal}
+      />
       
       {/* Permission info banner for non-super-admin users */}
       {!isLoadingUser && !isSuperAdmin && (
@@ -269,12 +318,12 @@ export default function ManageStaff() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="relative w-80 bg-white">
+      <div className="flex items-center justify-between gap-2">
+        <div className="relative bg-white w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input 
             placeholder="Search by name or email..." 
-            className="pl-10" 
+            className="pl-10 w-full" 
             value={searchQuery}
             onChange={handleSearchChange}
           />
@@ -311,7 +360,7 @@ export default function ManageStaff() {
             </div>
           )}
           
-          {/* Job title filter dropdown */}
+          {/* Job title filter dropdown
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
@@ -329,7 +378,7 @@ export default function ManageStaff() {
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           {/* Sort options dropdown */}
           <DropdownMenu>
@@ -478,6 +527,42 @@ export default function ManageStaff() {
           totalItems={totalItems}
           itemsPerPage={itemsPerPage}
           onLimitChange={handleLimitChange}
+        />
+      )}
+
+      {/* View Staff Modal */}
+      {isViewModalOpen && selectedStaff && (
+        <ViewStaffModal
+          isOpen={isViewModalOpen}
+          onClose={handleCloseViewModal}
+          staff={selectedStaff}
+        />
+      )}
+
+      {/* Edit Staff Modal */}
+      {isEditModalOpen && selectedStaff && (
+        <EditStaffModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          staff={selectedStaff}
+        />
+      )}
+
+      {/* Delete Staff Modal */}
+      {isDeleteModalOpen && selectedStaff && (
+        <DeleteStaffModal
+          isOpen={isDeleteModalOpen}
+          onClose={handleCloseDeleteModal}
+          staff={selectedStaff}
+        />
+      )}
+
+      {/* Add Staff Modal */}
+      {isAddModalOpen && (
+        <AddStaffModal
+          isOpen={isAddModalOpen}
+          onClose={handleCloseAddModal}
+          userType={userData?.type || "admin"}
         />
       )}
     </div>
