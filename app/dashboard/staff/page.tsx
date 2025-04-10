@@ -347,12 +347,12 @@ export default function ManageStaff() {
           )}
 
           {/* School indicator for non-super-admin users */}
-          {!isLoadingUser && !isSuperAdmin && userSchoolId && (
+          {/* {!isLoadingUser && !isSuperAdmin && userSchoolId && (
             <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm">
               <Building className="h-4 w-4 text-gray-500" />
               <span>{userSchoolName}</span>
             </div>
-          )}
+          )} */}
           
           {/* Job title filter dropdown
           <DropdownMenu>

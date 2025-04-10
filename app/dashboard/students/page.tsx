@@ -71,8 +71,7 @@ export default function ManageStudents() {
   // Check user roles
   const isSuperAdmin = userData?.type === 'super_admin';
   const userSchoolId = userData?.school;
-  const userSchoolName = userData?.school_name || "Your School";
-  
+  console.log(userData?.school)
   // Display appropriate title based on user type
   const getPageTitle = () => {
     if (isLoadingUser) return "Loading...";
@@ -300,12 +299,12 @@ export default function ManageStudents() {
 
         <div className="flex items-center gap-2">
           {/* School indicator for non-super-admin users */}
-          {!isLoadingUser && !isSuperAdmin && userSchoolId && (
+          {/* {!isLoadingUser && !isSuperAdmin && userSchoolId && (
             <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm">
               <Building className="h-4 w-4 text-gray-500" />
               <span>{userSchoolName}</span>
             </div>
-          )}
+          )} */}
           
           {/* Section filter dropdown */}
           {/* <DropdownMenu>
@@ -369,7 +368,11 @@ export default function ManageStudents() {
               <TableHead>Email</TableHead>
               <TableHead>Student ID</TableHead>
               <TableHead>Section</TableHead>
-              <TableHead>School</TableHead>
+              {
+                isSuperAdmin && (
+                  <TableHead>School</TableHead>
+                )
+              }
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
@@ -425,9 +428,13 @@ export default function ManageStudents() {
                 <TableCell>{student.email}</TableCell>
                 <TableCell>{student.student_id || "Not assigned"}</TableCell>
                 <TableCell>{student.section || "Not assigned"}</TableCell>
-                <TableCell>
-                  {student.school_name || "Not assigned"}
-                </TableCell>
+                {
+                  isSuperAdmin && (
+                    <TableCell>
+                      {student.school_name || "Not assigned"}
+                    </TableCell>
+                  )
+                }
                 <TableCell>{getStatusBadge(student.email_verified)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">

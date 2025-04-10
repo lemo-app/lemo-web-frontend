@@ -192,27 +192,32 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
 
   // Handle image selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
-        return;
-      }
-      
-      // Check file type
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast.error("Please select an image file");
+        toast.error('Please select an image file');
         return;
       }
       
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
       setSelectedImage(file);
       
-      // Create preview
+      // Create a FileReader to read the image and create a preview
       const reader = new FileReader();
       reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
+        if (event.target?.result) {
+          setImagePreview(event.target.result as string);
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Failed to read the image file");
+        setImagePreview(null);
       };
       reader.readAsDataURL(file);
     }
@@ -364,7 +369,14 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
                       <Image
                         src={imagePreview} 
                         alt="Profile Preview" 
+                        width={80}
+                        height={80}
                         className="w-full h-full object-cover"
+                        onError={() => {
+                          toast.error("Failed to load image preview");
+                          setImagePreview(null);
+                        }}
+                        priority
                       />
                     ) : (
                       <ImageIcon className="h-8 w-8 text-gray-400" />
