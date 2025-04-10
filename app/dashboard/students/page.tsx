@@ -9,7 +9,7 @@ import { ArrowUpDown, ChevronDown, Edit, Eye, Loader2, Search, Trash2, User, Inf
 import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import HeaderWithButtonsLinks from "@/components/dashboard/common/header-with-buttons-links"
-import { fetchUsers, FetchUsersParams, deleteUser } from "@/utils/client-api"
+import { fetchUsers, FetchUsersParams, deleteUser, fetchCurrentUser } from "@/utils/client-api"
 import { toast } from "sonner"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { User as UserType } from "@/utils/interface/user.types"
@@ -64,10 +64,7 @@ export default function ManageStudents() {
     isError: isUserError 
   } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: async () => {
-      const response = await apiClient.get('/users/me');
-      return response.data as CurrentUser;
-    },
+    queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 

@@ -9,13 +9,12 @@ import { ArrowUpDown, ChevronDown, Edit, Eye, Loader2, Search, Trash2, User, Inf
 import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import HeaderWithButtonsLinks from "@/components/dashboard/common/header-with-buttons-links"
-import { fetchUsers, FetchUsersParams } from "@/utils/client-api"
+import { fetchUsers, FetchUsersParams, fetchCurrentUser, deleteUser } from "@/utils/client-api"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { User as UserType } from "@/utils/interface/user.types"
 import Image from "next/image"
 import { format, parseISO } from 'date-fns'
-import apiClient from "@/utils/client-api"
 import ViewStaffModal from "@/components/dashboard/staff/view-staff-modal"
 import EditStaffModal from "@/components/dashboard/staff/edit-staff-modal"
 import DeleteStaffModal from "@/components/dashboard/staff/delete-staff-modal"
@@ -55,25 +54,20 @@ export default function ManageStaff() {
   
   // Fetch current user information
   const { 
-    data: userData, 
+    data: currentUser, 
     isLoading: isLoadingUser, 
     isError: isUserError 
-  } = useQuery({
+  } = useQuery<CurrentUser>({
     queryKey: ['currentUser'],
-    queryFn: async () => {
-      const response = await apiClient.get('/users/me');
-      return response.data as CurrentUser;
-    },
+    queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 5, // 15 minutes
   });
 
   // Check user roles
-  const isSuperAdmin = userData?.type === 'super_admin';
-  // console.log(isSuperAdmin)
-  // console.log(userData)
+  const isSuperAdmin = currentUser?.type === 'super_admin';
 
-  const userSchoolId = userData?.school;
-  const userSchoolName = userData?.school_name || "Your School";
+  const userSchoolId = currentUser?.school;
+  const userSchoolName = currentUser?.school_name || "Your School";
   
   // Handle staff type change (only for super_admin)
   const handleStaffTypeChange = (type: 'school_manager' | 'admin') => {
@@ -181,10 +175,10 @@ export default function ManageStaff() {
   };
 
   // Handle job title filter change
-  const handleJobTitleFilterChange = (title: string) => {
-    setJobTitleFilter(title);
-    setCurrentPage(1); // Reset to first page when filtering
-  };
+  // const handleJobTitleFilterChange = (title: string) => {
+  //   setJobTitleFilter(title);
+  //   setCurrentPage(1); // Reset to first page when filtering
+  // };
 
   // Get sort option display text
   const getSortOptionText = (option: SortOption) => {
@@ -562,7 +556,7 @@ export default function ManageStaff() {
         <AddStaffModal
           isOpen={isAddModalOpen}
           onClose={handleCloseAddModal}
-          userType={userData?.type || "admin"}
+          userType={currentUser?.type || "admin"}
         />
       )}
     </div>

@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
-import apiClient from "@/utils/client-api";
+import { deleteUser } from "@/utils/client-api";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
 
@@ -38,8 +38,8 @@ const DeleteStaffModal = ({ staff, isOpen, onClose }: DeleteStaffModalProps) => 
 
     setIsDeleting(true);
     try {
-      // Call the API to delete the staff
-      await apiClient.delete(`/users/${staff._id}`);
+      // Call the API to delete the staff using the imported function
+      await deleteUser(staff._id);
       
       // Invalidate the staff query to refresh the data
       queryClient.invalidateQueries({ queryKey: ['staff'] });

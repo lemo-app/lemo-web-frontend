@@ -1,19 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+// import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Loader2, UserCog } from "lucide-react"
 import { Pagination } from "@/components/dashboard/common/pagination"
 import { format, parseISO } from "date-fns"
-import apiClient, { fetchUsers, FetchUsersParams } from "@/utils/client-api"
+import { fetchUsers, FetchUsersParams, fetchCurrentUser } from "@/utils/client-api"
 import { User } from "@/utils/interface/user.types"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import HeaderWithButtonsLinks from "@/components/dashboard/common/header-with-buttons-links"
 import { InviteAdminModal } from "@/components/dashboard/admins/invite-admin-modal"
+
+// Define the CurrentUser interface
+interface CurrentUser extends User {
+  type: 'super_admin' | 'admin' | 'school_manager';
+  school_name?: string;
+}
 
 export default function ManageAdmins() {
   const [currentPage, setCurrentPage] = useState(1)
@@ -26,15 +32,12 @@ export default function ManageAdmins() {
 
   // Fetch current user information
   const { 
-    data: userData, 
+    data: currentUser, 
     isLoading: isLoadingUser, 
     isError: isUserError 
-  } = useQuery({
+  } = useQuery<CurrentUser>({
     queryKey: ['currentUser'],
-    queryFn: async () => {
-      const response = await apiClient.get('/users/me');
-      return response.data;
-    },
+    queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
   // Build query parameters for React Query
@@ -146,7 +149,7 @@ export default function ManageAdmins() {
               <TableHead>Status</TableHead>
               <TableHead>Invitation Time</TableHead>
               <TableHead>Updated At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,12 +200,12 @@ export default function ManageAdmins() {
                 </TableCell>
                 <TableCell className="text-sm text-gray-600">{formatDate(admin.createdAt)}</TableCell>
                 <TableCell className="text-sm text-gray-600">{formatDate(admin.updatedAt)}</TableCell>
-                <TableCell className="text-right">
+                {/* <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     <Button variant="outline" size="sm">Details</Button>
                     <Button variant="outline" size="sm">Edit</Button>
                   </div>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
@@ -224,7 +227,7 @@ export default function ManageAdmins() {
       <InviteAdminModal
         isOpen={isInviteModalOpen}
         onClose={handleCloseInviteModal}
-        userType={userData?.type}
+        userType={currentUser?.type || "admin"}
       />
     </div>
   )
