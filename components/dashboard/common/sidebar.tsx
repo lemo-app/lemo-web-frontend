@@ -22,9 +22,24 @@ import { useUserStore } from "@/utils/store/user-store"
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
+// Create a sidebar state for global use
+import { create } from 'zustand'
+
+interface SidebarState {
+  isCollapsed: boolean
+  toggleCollapse: () => void
+  setCollapsed: (collapsed: boolean) => void
+}
+
+export const useSidebarStore = create<SidebarState>((set) => ({
+  isCollapsed: false,
+  toggleCollapse: () => set((state) => ({ isCollapsed: !state.isCollapsed })),
+  setCollapsed: (collapsed) => set({ isCollapsed: collapsed }),
+}))
+
 export default function Sidebar() {
   const [isMounted, setIsMounted] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const { isCollapsed, toggleCollapse } = useSidebarStore()
   const pathname = usePathname()
   const { user } = useUserStore()
   const router = useRouter();
@@ -131,7 +146,7 @@ export default function Sidebar() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleCollapse}
           className="text-sky-600 hover:text-sky-800 hover:bg-sky-100"
         >
           <ChevronRight
