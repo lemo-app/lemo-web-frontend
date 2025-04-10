@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { School } from "@/utils/interface/school.types"
 import DeleteSchoolModal from "@/components/dashboard/schools/delete-school-modal"
 import ViewSchoolDetailsModal from "@/components/dashboard/schools/view-school-details-modal"
+import EditSchoolModal from "@/components/dashboard/schools/edit-school-modal"
 
 // Define sorting options
 type SortOption = 'nameAsc' | 'nameDesc' | 'dateAsc' | 'dateDesc' | 'none';
@@ -40,7 +41,7 @@ const formatTimeFromISO = (isoString?: string): string => {
   }
 };
 
-export default function ManageSchools() {
+export default function Schools() {
   // Get the query client for invalidation
   const queryClient = useQueryClient();
   
@@ -59,6 +60,10 @@ export default function ManageSchools() {
   // View details modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [schoolToView, setSchoolToView] = useState<School | null>(null)
+
+  // Edit modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [schoolToEdit, setSchoolToEdit] = useState<School | null>(null);
 
   // Convert our UI sort option to API parameters
   const getSortParams = () => {
@@ -120,23 +125,17 @@ export default function ManageSchools() {
   }
   
   // Handle edit school
-  const handleEditSchool = (schoolId: string) => {
-    // In a real app, you would open a modal or navigate to an edit page
-    // For now, just show a toast message
-    setEditingSchool(schoolId);
-    toast.info(`Edit functionality for school ${schoolId} would open a modal or edit page`, {
-      description: "This is a placeholder for the edit functionality"
-    });
-    
-    // Clear the editing state after a brief delay
+  const handleEditSchool = (school: School) => {
+    setSchoolToEdit(school);
+    setIsEditModalOpen(true);
+  };
+  
+  // Handle closing the edit modal
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
     setTimeout(() => {
-      setEditingSchool(null);
-    }, 2000);
-    
-    // In a real implementation, you would:
-    // 1. Open a modal or navigate to an edit page
-    // 2. Get form data from the user
-    // 3. Then call updateSchoolMutation.mutate({ id: schoolId, data: formData })
+      setSchoolToEdit(null);
+    }, 300);
   };
   
   // Handle opening the view details modal
@@ -333,7 +332,7 @@ export default function ManageSchools() {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8"
-                      onClick={() => handleEditSchool(school._id)}
+                      onClick={() => handleEditSchool(school)}
                       disabled={updateSchoolMutation.isPending && editingSchool === school._id}
                     >
                       <Edit className="h-4 w-4" />
@@ -377,6 +376,12 @@ export default function ManageSchools() {
         school={schoolToView}
         isOpen={isViewModalOpen}
         onClose={handleCloseViewModal}
+      />
+
+      <EditSchoolModal
+        school={schoolToEdit}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
       />
     </div>
   )
