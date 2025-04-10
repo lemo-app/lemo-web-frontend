@@ -4,64 +4,197 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Save } from "lucide-react";
-import React, { useState } from "react";
+import { Clock, Save, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchCurrentUser, fetchSchoolById, updateSchool } from "@/utils/client-api";
+import { toast } from "sonner";
+
+// Helper function to convert ISO time to HTML time input format (HH:MM)
+const formatISOToTimeInput = (isoString?: string): string => {
+  if (!isoString) return "";
+  
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
+      return "";
+    }
+    
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } catch {
+    return "";
+  }
+};
+
+// Helper function to convert HTML time to ISO format
+const formatTimeToISO = (timeString: string): string => {
+  if (!timeString) return "";
+  
+  const [hours, minutes] = timeString.split(':');
+  const date = new Date();
+  date.setHours(parseInt(hours, 10));
+  date.setMinutes(parseInt(minutes, 10));
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+  
+  return date.toISOString();
+};
 
 const SchoolDetails = () => {
-  const [schoolName, setSchoolName] = useState("");
-  const [schoolAddress, setSchoolAddress] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
-  const [description, setDescription] = useState("");
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialData, setInitialData] = useState({
+    school_name: "",
+    address: "",
+    contact_number: "",
+    description: "",
+    start_time: "",
+    end_time: "",
+  });
+  const [formData, setFormData] = useState({
+    school_name: "",
+    address: "",
+    contact_number: "",
+    description: "",
+    start_time: "",
+    end_time: "",
+  });
 
-  const handleSaveSettings = () => {
-    console.log("School Settings:", {
-      schoolName,
-      schoolAddress,
-      contactNumber,
-      description,
+  // Fetch current user to get school ID
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: fetchCurrentUser,
+    staleTime: 1000 * 60 * 15, // 15 minutes
+  });
+
+  // Fetch school details using the school ID from user data
+  const { data: schoolData, isLoading: isLoadingSchool } = useQuery({
+    queryKey: ['school', userData?.school],
+    queryFn: () => fetchSchoolById(userData?.school),
+    enabled: !!userData?.school, // Only run query if we have a school ID
+  });
+
+  // Update form data and initial data when school data is loaded
+  useEffect(() => {
+    if (schoolData) {
+      const newData = {
+        school_name: schoolData.school_name || "",
+        address: schoolData.address || "",
+        contact_number: schoolData.contact_number || "",
+        description: schoolData.description || "",
+        start_time: formatISOToTimeInput(schoolData.start_time) || "",
+        end_time: formatISOToTimeInput(schoolData.end_time) || "",
+      };
+      setFormData(newData);
+      setInitialData(newData);
+    }
+  }, [schoolData]);
+
+  // Check if form has any changes
+  const hasChanges = useMemo(() => {
+    return Object.keys(formData).some(key => {
+      return formData[key as keyof typeof formData] !== initialData[key as keyof typeof initialData];
     });
+  }, [formData, initialData]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.id]: e.target.value
+    }));
   };
+
+  const handleSaveSettings = async () => {
+    if (!userData?.school) {
+      toast.error("No school associated with current user");
+      return;
+    }
+
+    if (!hasChanges) {
+      toast.info("No changes to save");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Convert time values to ISO format before sending to the API
+      const dataToSend = {
+        ...formData,
+        start_time: formData.start_time ? formatTimeToISO(formData.start_time) : undefined,
+        end_time: formData.end_time ? formatTimeToISO(formData.end_time) : undefined,
+      };
+
+      await updateSchool(userData.school, dataToSend);
+      queryClient.invalidateQueries({ queryKey: ['school', userData.school] });
+      toast.success("School settings updated successfully");
+      setInitialData(formData); // Update initial data after successful save
+    } catch (error) {
+      console.error("Failed to update school settings:", error);
+      toast.error("Failed to update school settings");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoadingUser || isLoadingSchool) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex justify-center items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-gray-900">School Details</h2>
         <Button
-            onClick={handleSaveSettings} 
-            disabled={!schoolName || !schoolAddress || !contactNumber}
+          onClick={handleSaveSettings}
+          disabled={isSubmitting || !formData.school_name || !hasChanges}
         >
-            <Save className="h-4 w-4 mr-2" />
-            Save Settings
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Settings
+            </>
+          )}
         </Button>
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
           <Label className="text-muted-foreground">School Name</Label>
           <Input
-            id="schoolName"
+            id="school_name"
             placeholder="Type School Name here..."
-            value={schoolName}
-            onChange={(e) => setSchoolName(e.target.value)}
+            value={formData.school_name}
+            onChange={handleChange}
           />
         </div>
 
         <div className="space-y-2">
           <Label className="text-muted-foreground">School Address</Label>
           <Input
-            id="schoolAddress"
+            id="address"
             placeholder="Type School Address here..."
-            value={schoolAddress}
-            onChange={(e) => setSchoolAddress(e.target.value)}
+            value={formData.address}
+            onChange={handleChange}
           />
         </div>
 
         <div className="space-y-2">
           <Label className="text-muted-foreground">Contact Number</Label>
           <Input
-            id="contactNumber"
+            id="contact_number"
             placeholder="Type School Contact Number here..."
-            value={contactNumber}
-            onChange={(e) => setContactNumber(e.target.value)}
+            value={formData.contact_number}
+            onChange={handleChange}
           />
         </div>
 
@@ -73,25 +206,31 @@ const SchoolDetails = () => {
             id="description"
             placeholder="Type additional description here..."
             className="min-h-[120px]"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={formData.description}
+            onChange={handleChange}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Start Time</Label>
-            <Button variant="outline" className="w-full justify-start">
-              <Clock className="mr-2 h-4 w-4" />
-              <span className="text-muted-foreground">Select Time</span>
-            </Button>
+            <Input
+              id="start_time"
+              type="time"
+              value={formData.start_time}
+              onChange={handleChange}
+              className="w-full"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-muted-foreground">End Time</Label>
-            <Button variant="outline" className="w-full justify-start">
-              <Clock className="mr-2 h-4 w-4" />
-              <span className="text-muted-foreground">Select Time</span>
-            </Button>
+            <Input
+              id="end_time"
+              type="time"
+              value={formData.end_time}
+              onChange={handleChange}
+              className="w-full"
+            />
           </div>
         </div>
       </div>

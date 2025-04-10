@@ -346,6 +346,17 @@ export const fetchCurrentUser = async () => {
   }
 };
 
+// Fetch a specific school by ID
+export const fetchSchoolById = async (schoolId: string) => {
+  try {
+    const response = await apiClient.get(`/schools/${schoolId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch school by ID error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 
