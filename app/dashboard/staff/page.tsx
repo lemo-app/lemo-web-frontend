@@ -21,16 +21,6 @@ import DeleteStaffModal from "@/components/dashboard/staff/delete-staff-modal"
 import { AddStaffModal } from "@/components/dashboard/staff/add-staff-modal"
 
 // Extend the UserType to include job_title which is returned from the API
-interface StaffMember extends UserType {
-  job_title?: string;
-  school?: string;
-}
-
-// Current user interface
-interface CurrentUser extends StaffMember {
-  type: 'super_admin' | 'admin' | 'school_manager';
-  school_name?: string;
-}
 
 // Define sorting options
 type SortOption = 'nameAsc' | 'nameDesc' | 'emailAsc' | 'emailDesc' | 'dateAsc' | 'dateDesc' | 'none';
@@ -50,14 +40,14 @@ export default function ManageStaff() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<UserType | null>(null);
   
   // Fetch current user information
   const { 
     data: currentUser, 
     isLoading: isLoadingUser, 
     isError: isUserError 
-  } = useQuery<CurrentUser>({
+  } = useQuery<UserType>({
     queryKey: ['currentUser'],
     queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 5, // 15 minutes
@@ -66,8 +56,8 @@ export default function ManageStaff() {
   // Check user roles
   const isSuperAdmin = currentUser?.type === 'super_admin';
 
-  const userSchoolId = currentUser?.school;
-  const userSchoolName = currentUser?.school_name || "Your School";
+  const userSchoolId = currentUser?.school?._id;
+  const userSchoolName = currentUser?.school.school_name || "Your School";
   
   // Handle staff type change (only for super_admin)
   const handleStaffTypeChange = (type: 'school_manager' | 'admin') => {
@@ -147,7 +137,7 @@ export default function ManageStaff() {
   const isLoading = isLoadingUser || isLoadingStaff;
   
   // Extract data from query result
-  const staffMembers = (data?.data?.users || []) as StaffMember[];
+  const staffMembers = (data?.data?.users || []) as UserType[];
   const totalItems = data?.data?.totalUsers || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   
@@ -227,7 +217,7 @@ export default function ManageStaff() {
   };
 
   // Handle view staff details
-  const handleViewStaffDetails = (staffMember: StaffMember) => {
+  const handleViewStaffDetails = (staffMember: UserType) => {
     setSelectedStaff(staffMember);
     setIsViewModalOpen(true);
   };
@@ -242,7 +232,7 @@ export default function ManageStaff() {
   };
 
   // Handle edit staff
-  const handleEditStaff = (staffMember: StaffMember) => {
+  const handleEditStaff = (staffMember: UserType) => {
     setSelectedStaff(staffMember);
     setIsEditModalOpen(true);
   };
@@ -257,7 +247,7 @@ export default function ManageStaff() {
   };
 
   // Handle delete staff confirmation
-  const handleDeleteStaff = (staffMember: StaffMember) => {
+  const handleDeleteStaff = (staffMember: UserType) => {
     setSelectedStaff(staffMember);
     setIsDeleteModalOpen(true);
   };
@@ -416,6 +406,7 @@ export default function ManageStaff() {
               <TableHead>Email</TableHead>
               <TableHead>Job Title</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className={currentUser?.type == 'super_admin' ? 'block' : 'hidden'}>School Name</TableHead>
               <TableHead>Invited At</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
@@ -477,10 +468,13 @@ export default function ManageStaff() {
                   )}
                 </TableCell>
                 <TableCell>{getStatusBadge(staff.email_verified)}</TableCell>
+                <TableCell className={staff.type == 'super_admin' ? 'block' : 'hidden'}>{staff.school.school_name}</TableCell>
                 <TableCell>{formatDate(staff.createdAt)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button 
+                <TableCell 
+                  className="text-right flex items-center justify-end gap-2"
+                >
+                  <Button 
+                      disabled={isLoading || currentUser?._id === staff._id}
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8"
@@ -489,6 +483,7 @@ export default function ManageStaff() {
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button 
+                      disabled={isLoading || currentUser?._id === staff._id}
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8"
@@ -497,6 +492,7 @@ export default function ManageStaff() {
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button 
+                      disabled={isLoading || currentUser?._id === staff._id}
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8"
@@ -504,7 +500,6 @@ export default function ManageStaff() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -529,7 +524,7 @@ export default function ManageStaff() {
         <ViewStaffModal
           isOpen={isViewModalOpen}
           onClose={handleCloseViewModal}
-          staff={selectedStaff}
+          staff={selectedStaff as any}
         />
       )}
 
@@ -538,7 +533,7 @@ export default function ManageStaff() {
         <EditStaffModal
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}
-          staff={selectedStaff}
+          staff={selectedStaff as any}
         />
       )}
 

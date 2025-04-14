@@ -3,25 +3,17 @@ import { Download, Loader2, Upload } from "lucide-react";
 import QrCodeIcon from '@/assets/images/dashboard/settings/qr-code.svg';
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCurrentUser, fetchSchoolById } from "@/utils/client-api";
-
+import { fetchCurrentUser } from "@/utils/client-api";
 
 const QrCodes = () => {
-  // Fetch current user to get school ID
+  // Fetch current user to get school data
   const { data: userData, isLoading: isLoadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  // Fetch school details using the school ID from user data
-  const { data: schoolData, isLoading: isLoadingSchool } = useQuery({
-    queryKey: ['school', userData?.school],
-    queryFn: () => fetchSchoolById(userData?.school),
-    enabled: !!userData?.school, // Only run query if we have a school ID
-  });
-
-  if (isLoadingUser || isLoadingSchool) {
+  if (isLoadingUser) {
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-lg shadow-sm p-6 flex justify-center items-center">
@@ -38,9 +30,9 @@ const QrCodes = () => {
         <h2 className="text-lg font-medium text-gray-900 mb-4">School Logo</h2>
         <p className="text-sm text-gray-500 mb-4">Logo</p>
         <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
-          {schoolData?.logo_url ? (
+          {userData?.school?.logo_url ? (
             <Image 
-              src={schoolData.logo_url}
+              src={userData.school.logo_url}
               alt="School Logo"
               width={200}
               height={200}
@@ -64,7 +56,7 @@ const QrCodes = () => {
           )}
         </div>
         <Button variant="secondary" className="w-full mt-4">
-          {schoolData?.logo_url ? (
+          {userData?.school?.logo_url ? (
             <>
               <Upload className="h-4 w-4 mr-2" />
               Change Logo
@@ -82,9 +74,9 @@ const QrCodes = () => {
         </h2>
         <p className="text-sm text-gray-500 mb-4">QR Code</p>
         <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
-          {schoolData?.qr_url ? (
+          {userData?.school?.qr_url ? (
             <Image 
-              src={schoolData.qr_url}
+              src={userData.school.qr_url}
               alt="School QR Code"
               width={200}
               height={200}
@@ -111,9 +103,9 @@ const QrCodes = () => {
           <Button variant="secondary" className="flex-1">
             Generate
           </Button>
-          {schoolData?.qr_url && (
+          {userData?.school?.qr_url && (
             <Button variant="secondary" className="flex-1" asChild>
-              <a href={schoolData.qr_url} download target="_blank" rel="noopener noreferrer">
+              <a href={userData.school.qr_url} download target="_blank" rel="noopener noreferrer">
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </a>

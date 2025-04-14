@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Clock, Save, Loader2 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchCurrentUser, fetchSchoolById, updateSchool } from "@/utils/client-api";
+import { fetchCurrentUser, updateSchool } from "@/utils/client-api";
 import { toast } from "sonner";
 
 // Helper function to convert ISO time to HTML time input format (HH:MM)
@@ -62,35 +62,28 @@ const SchoolDetails = () => {
     end_time: "",
   });
 
-  // Fetch current user to get school ID
+  // Fetch current user to get school data
   const { data: userData, isLoading: isLoadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
-  // Fetch school details using the school ID from user data
-  const { data: schoolData, isLoading: isLoadingSchool } = useQuery({
-    queryKey: ['school', userData?.school],
-    queryFn: () => fetchSchoolById(userData?.school),
-    enabled: !!userData?.school, // Only run query if we have a school ID
-  });
-
-  // Update form data and initial data when school data is loaded
+  // Update form data and initial data when user data is loaded
   useEffect(() => {
-    if (schoolData) {
+    if (userData?.school) {
       const newData = {
-        school_name: schoolData.school_name || "",
-        address: schoolData.address || "",
-        contact_number: schoolData.contact_number || "",
-        description: schoolData.description || "",
-        start_time: formatISOToTimeInput(schoolData.start_time) || "",
-        end_time: formatISOToTimeInput(schoolData.end_time) || "",
+        school_name: userData.school.school_name || "",
+        address: userData.school.address || "",
+        contact_number: userData.school.contact_number || "",
+        description: userData.school.description || "",
+        start_time: formatISOToTimeInput(userData.school.start_time) || "",
+        end_time: formatISOToTimeInput(userData.school.end_time) || "",
       };
       setFormData(newData);
       setInitialData(newData);
     }
-  }, [schoolData]);
+  }, [userData]);
 
   // Check if form has any changes
   const hasChanges = useMemo(() => {
@@ -126,8 +119,8 @@ const SchoolDetails = () => {
         end_time: formData.end_time ? formatTimeToISO(formData.end_time) : undefined,
       };
 
-      await updateSchool(userData.school, dataToSend);
-      queryClient.invalidateQueries({ queryKey: ['school', userData.school] });
+      await updateSchool(userData.school._id, dataToSend);
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       toast.success("School settings updated successfully");
       setInitialData(formData); // Update initial data after successful save
     } catch (error) {
@@ -138,7 +131,7 @@ const SchoolDetails = () => {
     }
   };
 
-  if (isLoadingUser || isLoadingSchool) {
+  if (isLoadingUser) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6 flex justify-center items-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

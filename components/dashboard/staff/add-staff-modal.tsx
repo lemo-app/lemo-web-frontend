@@ -57,51 +57,31 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
   // console.log('schoolsData:', schoolsData)
   const schools = useMemo(()=> schoolsData?.data?.schools || [], [schoolsData])
   // console.log('schools:', schools)
+  
   // Fetch current user's information and school
   const fetchCurrentUserInfo = useCallback(async () => {
     setIsLoadingUserData(true)
     try {
       const response = await apiClient.get('/users/me')
-      console.log('response from fetchCurrentUserInfo: ', response.data)
       if (response.data?.type) {
         setCurrentUserType(response.data.type)
-        // Only set staffType for non-super_admin users
-        if (response.data.type !== "super_admin") {
+        // Only set staffType for school_manager users
+        if (response.data.type === "school_manager") {
           setStaffType("school_manager")
         }
       }
 
-      // console.log('response.data.school:', response.data.school)
       if (response.data?.school) {
-        setCurrentUserSchool(response.data.school)
-        if (response.data.school && !currentUserSchoolName) {
-          try {
-            const schoolResponse = await fetchSchools({ limit: 100 })
-
-            // console.log('schoolResponse:', schoolResponse)
-            
-            const schoolData = schoolResponse.data?.schools?.find(
-              (s: School) => s._id === response.data.school
-            )
-            if (schoolData) {
-              setCurrentUserSchoolName(schoolData.school_name)
-            }
-          } catch (schoolError) {
-            console.error("Error fetching school details:", schoolError)
-          }
-        }
+        setCurrentUserSchool(response.data.school._id)
+        setCurrentUserSchoolName(response.data.school.school_name)
       }
-      // else if (currentUserType !== "super_admin") {
-      //   // Only show this error for non-super_admin users
-      //   toast.error("You are not associated with any school. Please contact an administrator.")
-      // }
     } catch (err) {
-      console.log("Error fetching current user info:", err)
+      console.error("Error fetching current user info:", err)
       toast.error("Could not retrieve your user information.")
     } finally {
       setIsLoadingUserData(false)
     }
-  }, [currentUserSchoolName])
+  }, [])
 
   // Load custom roles from localStorage on component mount
   useEffect(() => {
@@ -263,11 +243,13 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
     setSchoolSearch("")
   }
 
-  // Handle staff type change (only for super_admin)
+  // Handle staff type change (only for super_admin and admin)
   const handleTypeChange = (type: "admin" | "school_manager") => {
-    if (userType === "super_admin") {
+    if (userType === "super_admin" || userType === "admin") {
       setStaffType(type)
       setTypeSelectOpen(false)
+    }else{
+      toast.error("You cannot change the staff type")
     }
   }
 
@@ -327,6 +309,8 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
     )
   }
 
+
+  console.log('userType:', userType)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
@@ -363,7 +347,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
             />
           </div>
 
-          {/* Staff Type Selection - Only editable for super_admin */}
+          {/* Staff Type Selection - Only editable for super_admin and admin */}
           <div className="space-y-2">
             <Label htmlFor="staffType">Staff Type <span className="text-destructive">*</span></Label>
             {isLoadingUserData ? (
@@ -371,8 +355,8 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
                 <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
                 <span className="text-sm text-muted-foreground">Loading...</span>
               </div>
-            ) : userType === "super_admin" ? (
-              // For super_admin, show dropdown to select staff type
+            ) : (userType === "super_admin" || userType === "admin") ? (
+              // For super_admin and admin, show dropdown to select staff type
               <div className="relative">
                 <div
                   className={cn(
@@ -394,7 +378,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
                 )}
               </div>
             ) : (
-              // For non-super_admin, show locked school_manager type
+              // For school_manager, show locked school_manager type
               <div className="flex h-10 items-center px-3 rounded-md border border-input bg-background">
                 <div className="flex items-center gap-2 text-sm">
                   <span>School Manager</span>
@@ -402,7 +386,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
                 </div>
               </div>
             )}
-            {userType !== "super_admin" && (
+            {userType === "school_manager" && (
               <p className="text-xs text-muted-foreground">
                 You can only add School Manager staff.
               </p>
