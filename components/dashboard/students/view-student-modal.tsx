@@ -6,18 +6,13 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { School as SchoolIcon, User as UserIcon, Book, Calendar, Users, Tag, GraduationCap, CheckCircle, XCircle } from "lucide-react"
 import Image from "next/image"
-import { User } from "@/utils/interface/user.types"
+import { User as UserType } from "@/utils/interface/user.types"
 
-// Student interface extending User type
-interface Student extends User {
-  school_name?: string;
-  school?: string;
-}
 
 interface ViewStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  student: Student | null;
+  student: UserType | null;
 }
 
 const ViewStudentModal = ({ isOpen, onClose, student }: ViewStudentModalProps) => {
@@ -149,7 +144,7 @@ const ViewStudentModal = ({ isOpen, onClose, student }: ViewStudentModalProps) =
               <Label className="text-xs text-gray-500">School</Label>
               <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-md">
                 <SchoolIcon className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{student.school_name || "Not assigned"}</span>
+                <span className="text-sm">{student.school.school_name || "Not assigned"}</span>
               </div>
             </div>
 

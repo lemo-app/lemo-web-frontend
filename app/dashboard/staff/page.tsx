@@ -57,7 +57,6 @@ export default function ManageStaff() {
   const isSuperAdmin = currentUser?.type === 'super_admin';
 
   const userSchoolId = currentUser?.school?._id;
-  const userSchoolName = currentUser?.school.school_name || "Your School";
   
   // Handle staff type change (only for super_admin)
   const handleStaffTypeChange = (type: 'school_manager' | 'admin') => {
@@ -468,7 +467,7 @@ export default function ManageStaff() {
                   )}
                 </TableCell>
                 <TableCell>{getStatusBadge(staff.email_verified)}</TableCell>
-                <TableCell className={staff.type == 'super_admin' ? 'block' : 'hidden'}>{staff.school.school_name}</TableCell>
+                <TableCell className={(staff.type == 'super_admin' || currentUser?.type == 'super_admin') ? 'block' : 'hidden'}>{staff?.school?.school_name ?? 'N/A'}</TableCell>
                 <TableCell>{formatDate(staff.createdAt)}</TableCell>
                 <TableCell 
                   className="text-right flex items-center justify-end gap-2"

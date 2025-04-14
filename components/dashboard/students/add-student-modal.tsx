@@ -15,17 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
-// Extend the UserType to include student-specific fields
-
-// Current user interface
-interface CurrentUser extends UserType {
-  type: 'super_admin' | 'admin' | 'school_manager';
-  school_name?: string;
-  school?: string;
-}
-
-// School interface is now imported from school.types.ts
-
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;

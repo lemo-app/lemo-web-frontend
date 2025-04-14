@@ -19,18 +19,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ViewStudentModal from "@/components/dashboard/students/view-student-modal"
 import EditStudentModal from '@/components/dashboard/students/edit-student-modal'
 
-// Extend the UserType to include student-specific fields
-interface Student extends UserType {
-  school_name?: string;
-  school?: string;
-}
-
-// Current user interface
-interface CurrentUser extends UserType {
-  type: 'super_admin' | 'admin' | 'school_manager';
-  school_name?: string;
-  school?: string;
-}
 
 // Define sorting options
 type SortOption = 'nameAsc' | 'nameDesc' | 'emailAsc' | 'emailDesc' | 'dateAsc' | 'dateDesc' | 'none';
@@ -47,12 +35,12 @@ export default function ManageStudents() {
   
   // Delete confirmation dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
+  const [studentToDelete, setStudentToDelete] = useState<UserType | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   
   // View student modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<UserType | null>(null)
   
   // Edit student modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -142,7 +130,7 @@ export default function ManageStudents() {
   const isLoading = isLoadingUser || isLoadingStudents;
   
   // Extract data from query result
-  const students = (data?.data?.users || []) as Student[];
+  const students = (data?.data?.users || []) as UserType[];
   const totalItems = data?.data?.totalUsers || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   console.log(students)
@@ -212,19 +200,19 @@ export default function ManageStudents() {
   };
 
   // Handle view student details
-  const handleViewStudentDetails = (student: Student) => {
+  const handleViewStudentDetails = (student: UserType) => {
     setSelectedStudent(student);
     setIsViewModalOpen(true);
   };
 
   // Handle edit student
-  const handleEditStudent = (student: Student) => {
+  const handleEditStudent = (student: UserType) => {
     setSelectedStudent(student);
     setIsEditModalOpen(true);
   };
 
   // Handle delete student confirmation
-  const handleDeleteStudent = (student: Student) => {
+  const handleDeleteStudent = (student: UserType) => {
     setStudentToDelete(student);
     setIsDeleteDialogOpen(true);
   };
@@ -431,7 +419,7 @@ export default function ManageStudents() {
                 {
                   isSuperAdmin && (
                     <TableCell>
-                      {student.school_name || "Not assigned"}
+                      {student.school.school_name || "Not assigned"}
                     </TableCell>
                   )
                 }
@@ -516,7 +504,7 @@ export default function ManageStudents() {
       <ViewStudentModal 
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        student={selectedStudent}
+        student={selectedStudent as any}
       />
 
       {/* Edit Student Modal */}
