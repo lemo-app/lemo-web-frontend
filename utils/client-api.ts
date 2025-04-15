@@ -357,6 +357,56 @@ export const fetchSchoolById = async (schoolId: string) => {
   }
 };
 
+// Send block request
+export const sendBlockReq = async (siteUrl: string, reason: string, user_id: string, school_id: string) => {
+  try {
+    const response = await apiClient.post('/block-requests', {
+      site_url: siteUrl,
+      reason: reason,
+      user: user_id,
+      school: school_id
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Send block request error:', error);
+    if (axios.isAxiosError(error)) {
+      toast.error(error.response?.data?.message || 'Failed to submit block request');
+    }
+    throw error;
+  }
+};
+
+// Fetch all block requests
+export const fetchBlockRequests = async () => {
+  try {
+    const response = await apiClient.get('/block-requests');
+    return response.data;
+  } catch (error) {
+    console.error('Fetch block requests error:', error);
+    if (axios.isAxiosError(error)) {
+      toast.error(error.response?.data?.message || 'Failed to fetch block requests');
+    }
+    throw error;
+  }
+};
+
+// Update block request status
+export const updateBlockRequest = async (requestId: string, status: 'approved' | 'rejected', rejectionReason?: string) => {
+  try {
+    const response = await apiClient.put(`/block-requests/${requestId}`, {
+      status,
+      rejectionReason
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Update block request error:', error);
+    if (axios.isAxiosError(error)) {
+      toast.error(error.response?.data?.message || 'Failed to update block request');
+    }
+    throw error;
+  }
+};
+
 export default apiClient;
 
 

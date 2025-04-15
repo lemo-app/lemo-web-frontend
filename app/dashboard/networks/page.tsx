@@ -3,26 +3,22 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { SubmitBlockReqModal } from "@/components/dashboard/networks/submit-block-req-modal"
+import { useQuery } from "@tanstack/react-query"
+import { fetchCurrentUser } from "@/utils/client-api"
+import { Loader2 } from "lucide-react"
+import { User } from "@/utils/interface/user.types"
 
 export default function NetworksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [siteLink, setSiteLink] = useState("")
-  const [reason, setReason] = useState("")
-
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log("Submitted:", { siteLink, reason })
-    // Reset form
-    setSiteLink("")
-    setReason("")
-    // Close modal
-    setIsModalOpen(false)
-    // Show success message (in a real app, you'd use a toast or notification)
-    alert("Request submitted successfully!")
-  }
+  const { 
+    data: currentUser, 
+    isLoading: isLoadingUser, 
+  } = useQuery<User>({
+    queryKey: ['currentUser'],
+    queryFn: fetchCurrentUser,
+    staleTime: 1000 * 60 * 5, // 15 minutes
+  });
 
   return (
     <div>
@@ -46,9 +42,21 @@ export default function NetworksPage() {
             <p className="text-muted-foreground max-w-md">
               Our automated site blocking feature is currently under development. In the meantime, please submit a request for blocking specific sites.
             </p>
-            <Button onClick={() => setIsModalOpen(true)}>
+            {
+              isLoadingUser ? (
+                <div className="flex items-center justify-center h-16 gap-2">
+                  <Loader2 className="animate-spin h-6 w-6 text-blue-500" />
+                  <p className="text-muted-foreground">Loading</p>
+                </div>
+              ) : (
+                <Button onClick={() => setIsModalOpen(true)}>
+                  Submit Block Request
+                </Button>
+              )
+            }
+            {/* <Button onClick={() => setIsModalOpen(true)}>
               Submit Blocking Request
-            </Button>
+            </Button> */}
           </div>
         </CardContent>
       </Card>
@@ -61,50 +69,12 @@ export default function NetworksPage() {
           <p className="text-muted-foreground">No recent requests found.</p>
         </CardContent>
       </Card>
-
-      {/* Site Blocking Request Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Add Sites to Blockage</DialogTitle>
-            </div>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label htmlFor="site-link" className="text-sm font-medium">
-                Site link
-              </label>
-              <Input 
-                id="site-link" 
-                placeholder="Type link here..." 
-                value={siteLink}
-                onChange={(e) => setSiteLink(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="additional-reasons" className="text-sm font-medium">
-                Additional Reasons
-              </label>
-              <Textarea 
-                id="additional-reasons" 
-                placeholder="Type reason here..." 
-                className="min-h-[100px]"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit} className="bg-gray-900 text-white hover:bg-gray-800">
-                Submit
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      
+      <SubmitBlockReqModal 
+        user={currentUser as User}
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
     </div>
   )
 }
