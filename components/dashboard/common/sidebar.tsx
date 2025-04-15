@@ -83,7 +83,7 @@ export default function Sidebar() {
           name: "School Settings",
           href: "/dashboard/settings",
           icon: <Settings className="h-5 w-5" />,
-          access: ["school_manager", "admin"],
+          access: ["admin"],
         },
         {
           name: "Manage Schools",
@@ -115,7 +115,20 @@ export default function Sidebar() {
 
 
   const handleLogout = () => {
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'; // Clear the token from cookies
+    // Clear cookies using js-cookie
+    const cookies = document.cookie.split(";");
+    // Loop through all cookies and remove them
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+    
+    // Clear user store state
+    useUserStore.getState().clearUser();
+    
+    // Redirect to login page
     router.push('/login');
   };
 

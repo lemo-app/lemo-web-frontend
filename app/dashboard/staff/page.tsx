@@ -405,6 +405,7 @@ export default function ManageStaff() {
               <TableHead>Email</TableHead>
               <TableHead>Job Title</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead className={currentUser?.type == 'super_admin' ? 'block' : 'hidden'}>School Name</TableHead>
               <TableHead>Invited At</TableHead>
               <TableHead className="text-right">Action</TableHead>
@@ -467,6 +468,7 @@ export default function ManageStaff() {
                   )}
                 </TableCell>
                 <TableCell>{getStatusBadge(staff.email_verified)}</TableCell>
+                <TableCell>{staff.type.replace('_', ' ').toLocaleUpperCase()}</TableCell>
                 <TableCell className={(staff.type == 'super_admin' || currentUser?.type == 'super_admin') ? 'block' : 'hidden'}>{staff?.school?.school_name ?? 'N/A'}</TableCell>
                 <TableCell>{formatDate(staff.createdAt)}</TableCell>
                 <TableCell 

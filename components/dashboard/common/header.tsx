@@ -8,8 +8,8 @@ import { Bell, ChevronsUpDown, LogOut, Menu, User, ChevronRight } from "lucide-r
 import avatarLogo from '@/assets/images/dashboard/common/avatar.png'; 
 import { useRouter, usePathname } from 'next/navigation';
 import { useUserStore } from "@/utils/store/user-store";
-import { UpdateUserModal } from "./profile-modal";
-
+import { ProfileModal } from "./profile-modal";
+ 
 const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -93,48 +93,33 @@ const Header: React.FC = () => {
             2
           </span>
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="relative h-10 p-3 rounded-md flex items-center cursor-pointer gap-2 border-gray-100 border-2">
-              {
-                userData.avatar_url ?
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={ userData.avatar_url ?? avatarLogo.src} alt="User image" />
-                  <AvatarFallback>{userData.full_name ?? 'U'}</AvatarFallback>
-                </Avatar> : 
-                <User className="size-5" />
-              }
+        
+        <Button
+          variant="ghost"
+          onClick={() => setIsModalOpen(true)}
+          className="relative h-10 p-3 rounded-md flex items-center gap-2 border-gray-100 border-2"
+        >
+          {userData.avatar_url ? (
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={userData.avatar_url ?? avatarLogo.src} alt="User image" />
+              <AvatarFallback>{userData.full_name ?? 'U'}</AvatarFallback>
+            </Avatar>
+          ) : (
+            <User className="size-5" />
+          )}
 
-              <div className="flex flex-col items-start text-xs">
-                <span className="font-medium">{userData?.full_name ?? 'Anonymous'}</span>
-                <span className="text-xs text-muted-foreground">{userData?.type?.replace('_', ' ').toLocaleUpperCase()}</span>
-              </div>
-              <ChevronsUpDown className="h-4 w-4" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem 
-            className="cursor-pointer"
-              onClick={() => setIsModalOpen(true)}
-            >
-              <User className="h-5 w-5 mr-2" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <div className="flex flex-col items-start text-xs">
+            <span className="font-medium">{userData?.full_name ?? 'Anonymous'}</span>
+            <span className="text-xs text-muted-foreground">
+              {userData?.type?.replace('_', ' ').toLocaleUpperCase()}
+            </span>
+          </div>
+        </Button>
       </div>
-      <UpdateUserModal
+      <ProfileModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         user={userData}
-        // onUpdate={handleUpdateUser}
       />
     </header>
   );

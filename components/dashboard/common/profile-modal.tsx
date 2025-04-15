@@ -19,15 +19,15 @@ import { toast } from "sonner";
 import { Camera, Loader2, User } from "lucide-react";
 import { uploadFile, updateUserProfile } from "@/utils/client-api";
 import { useUserStore } from "@/utils/store/user-store";
-import { IUser } from "@/utils/interface/user.types";
+import {  User as UserType } from "@/utils/interface/user.types";
 
 interface UpdateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: IUser;
+  user: UserType;
 }
 
-export function UpdateUserModal({
+export function ProfileModal({
   isOpen,
   onClose,
   user,

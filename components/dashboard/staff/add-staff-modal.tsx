@@ -310,7 +310,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
   }
 
 
-  console.log('userType:', userType)
+  // console.log('userType:', userType)
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
