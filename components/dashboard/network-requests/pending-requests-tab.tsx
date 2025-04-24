@@ -1,83 +1,104 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clock, Shield } from "lucide-react"
+import { Clock, User, Building2, Globe, CheckCircle, XCircle } from "lucide-react"
 import { BlockRequest } from "@/utils/interface/block-request.types"
+import { Button } from "@/components/ui/button"
 
 interface PendingRequestsTabProps {
   requests: BlockRequest[]
   isLoading: boolean
-  onViewDetails: (request: BlockRequest) => void
   onReject: (request: BlockRequest) => void
   onApprove: (request: BlockRequest) => void
 }
 
-export function PendingRequestsTab({ 
-  requests, 
-  isLoading, 
-  onViewDetails, 
-  onReject, 
-  onApprove 
+export function PendingRequestsTab({
+  requests,
+  isLoading,
+  onReject,
+  onApprove,
 }: PendingRequestsTabProps) {
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString()
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pending Approval Requests</CardTitle>
-        <CardDescription>Review and approve or reject site blocking requests</CardDescription>
+        <CardTitle>Pending Requests</CardTitle>
+        <CardDescription>Sites waiting for approval or rejection</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="text-center py-8">Loading requests...</div>
         ) : requests.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="rounded-full bg-blue-100 p-4 mx-auto w-fit mb-4">
-              <Shield className="h-8 w-8 text-blue-500" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No Pending Requests</h3>
-            <p className="text-muted-foreground">All site blocking requests have been processed.</p>
-          </div>
+          <p className="text-muted-foreground text-center py-8">No pending requests found.</p>
         ) : (
           <div className="space-y-4">
             {requests.map((request) => (
               <div key={request._id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-medium">{request.site_url}</h3>
-                    <p className="text-sm text-muted-foreground truncate max-w-md">{request.reason}</p>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="space-y-1">
+                    <h3 className="font-medium flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-gray-500" />
+                      <a 
+                        href={request.site_url.startsWith('http') ? request.site_url : `https://${request.site_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {request.site_url}
+                      </a>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {request.reason}
+                    </p>
                   </div>
-                  <Badge variant="outline" className="flex items-center gap-1">
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     Pending
                   </Badge>
                 </div>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm text-muted-foreground">
-                    Requested by {request.user.email} ({request.school.school_name}) on {formatDate(request.createdAt)}
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-gray-500" />
+                    <span>{request.school.school_name}</span>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => onViewDetails(request)}>
-                      Details
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => onReject(request)}
-                    >
-                      Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => onApprove(request)}
-                    >
-                      Approve
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span>{request.user.email}</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-gray-500" />
+                    <span>Requested on {formatDate(request.createdAt)}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => onReject(request)}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-green-600 hover:text-green-700"
+                    onClick={() => onApprove(request)}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
                 </div>
               </div>
             ))}

@@ -377,9 +377,10 @@ export const sendBlockReq = async (siteUrl: string, reason: string, user_id: str
 };
 
 // Fetch all block requests
-export const fetchBlockRequests = async () => {
+export const fetchBlockRequests = async (queryParams?: string) => {
   try {
-    const response = await apiClient.get('/block-requests');
+    const url = queryParams ? `/block-requests?${queryParams}` : '/block-requests';
+    const response = await apiClient.get(url);
     return response.data;
   } catch (error) {
     console.error('Fetch block requests error:', error);
@@ -391,11 +392,10 @@ export const fetchBlockRequests = async () => {
 };
 
 // Update block request status
-export const updateBlockRequest = async (requestId: string, status: 'approved' | 'rejected', rejectionReason?: string) => {
+export const updateBlockRequest = async (requestId: string, status: 'pending' | 'approved' | 'rejected') => {
   try {
     const response = await apiClient.put(`/block-requests/${requestId}`, {
-      status,
-      rejectionReason
+      status
     });
     return response.data;
   } catch (error) {

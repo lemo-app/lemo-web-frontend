@@ -6,96 +6,60 @@ import { Badge } from "@/components/ui/badge"
 import { Clock, CheckCircle, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
-import { BlockReqDetailsModal } from "@/components/dashboard/network-requests/block-req-details-modal"
 import { BlockReqRejectionModal } from "@/components/dashboard/network-requests/block-req-rejection-modal"
 import { PendingRequestsTab } from "@/components/dashboard/network-requests/pending-requests-tab"
 import { ApprovedRequestsTab } from "@/components/dashboard/network-requests/approved-requests-tab"
 import { RejectedRequestsTab } from "@/components/dashboard/network-requests/rejected-requests-tab"
 import { BlockRequest } from "@/utils/interface/block-request.types"
-
-// Demo data
-const demoRequests = [
-  {
-    _id: "1",
-    user: {
-      _id: "user1",
-      email: "teacher@school.com"
-    },
-    school: {
-      _id: "school1",
-      school_name: "International School"
-    },
-    site_url: "facebook.com",
-    reason: "Social media distraction during class hours",
-    status: "pending",
-    createdAt: "2025-04-15T08:30:00.000Z",
-    updatedAt: "2025-04-15T08:30:00.000Z"
-  },
-  {
-    _id: "2",
-    user: {
-      _id: "user2",
-      email: "admin@highschool.com"
-    },
-    school: {
-      _id: "school2",
-      school_name: "City High School"
-    },
-    site_url: "tiktok.com",
-    reason: "Students accessing during study periods",
-    status: "approved",
-    createdAt: "2025-04-14T10:15:00.000Z",
-    updatedAt: "2025-04-14T11:20:00.000Z"
-  },
-  {
-    _id: "3",
-    user: {
-      _id: "user3",
-      email: "principal@academy.com"
-    },
-    school: {
-      _id: "school3",
-      school_name: "STEM Academy"
-    },
-    site_url: "gaming.site.com",
-    reason: "Gaming website affecting student focus",
-    status: "rejected",
-    rejectionReason: "Site contains educational gaming content",
-    createdAt: "2025-04-13T09:45:00.000Z",
-    updatedAt: "2025-04-13T14:30:00.000Z"
-  }
-] as BlockRequest[]
+import { fetchBlockRequests, updateBlockRequest } from "@/utils/client-api"
 
 export default function NetworkApprovalPage(): React.ReactElement {
   const [selectedRequest, setSelectedRequest] = useState<BlockRequest | null>(null)
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false)
-  const [rejectionReason, setRejectionReason] = useState<string>("")
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState<boolean>(false)
+  // Add filter states
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [itemsPerPage] = useState<number>(10)
+  const [sortBy, setSortBy] = useState<string>('created_date')
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc')
+  const [schoolFilter, setSchoolFilter] = useState<string>('')
 
   const queryClient = useQueryClient()
 
-  // Using demo data instead of API call
-  const { data: requests = demoRequests, isLoading = false } = useQuery({
-    queryKey: ['blockRequests'],
+  // Build query parameters
+  const buildQueryParams = () => {
+    const params = new URLSearchParams()
+    
+    // Add pagination
+    params.append('page', currentPage.toString())
+    params.append('limit', itemsPerPage.toString())
+    
+    // Add sorting
+    if (sortBy) {
+      params.append('sortBy', sortBy)
+      params.append('order', order)
+    }
+    
+    // Add school filter if selected
+    if (schoolFilter) {
+      params.append('school', schoolFilter)
+    }
+    
+    return params.toString()
+  }
+
+  // Using real API endpoint with filters
+  const { data: requests = [], isLoading = false } = useQuery({
+    queryKey: ['blockRequests', currentPage, itemsPerPage, sortBy, order, schoolFilter],
     queryFn: async () => {
-      // Commented out actual API call
-      // const response = await fetchBlockRequests()
-      // return response.data
-      return demoRequests
+      const response = await fetchBlockRequests(buildQueryParams())
+      return response.data || []
     },
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5 // 5 minutes
   })
 
-  // Mock mutation for demo
   const updateRequestMutation = useMutation({
-    mutationFn: ({ requestId, status, reason }: { requestId: string; status: 'approved' | 'rejected'; reason?: string }) => {
-      // Mock API call
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          console.log('Mock update:', { requestId, status, reason })
-          resolve({ success: true })
-        }, 1000)
-      })
+    mutationFn: ({ requestId, status }: { requestId: string; status: 'approved' | 'rejected' }) => {
+      return updateBlockRequest(requestId, status)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blockRequests'] })
@@ -105,7 +69,6 @@ export default function NetworkApprovalPage(): React.ReactElement {
           : `Site ${selectedRequest?.site_url} has been approved for blocking`
       )
       setIsRejectionModalOpen(false)
-      setRejectionReason("")
       setSelectedRequest(null)
     },
     onError: (error) => {
@@ -123,12 +86,11 @@ export default function NetworkApprovalPage(): React.ReactElement {
   }
 
   const handleReject = async () => {
-    if (!selectedRequest || !rejectionReason.trim()) return
+    if (!selectedRequest) return
 
     updateRequestMutation.mutate({ 
       requestId: selectedRequest._id, 
-      status: 'rejected',
-      reason: rejectionReason
+      status: 'rejected'
     })
   }
 
@@ -138,7 +100,7 @@ export default function NetworkApprovalPage(): React.ReactElement {
   const rejectedRequests = requests.filter(req => req.status === 'rejected')
 
   return (
-    <div>
+    <div className=""> 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Network Blocking Approval</h1>
         <p className="text-muted-foreground">Review and manage network blocking requests</p>
@@ -173,10 +135,6 @@ export default function NetworkApprovalPage(): React.ReactElement {
           <PendingRequestsTab
             requests={pendingRequests}
             isLoading={isLoading}
-            onViewDetails={(request) => {
-              setSelectedRequest(request)
-              setIsDetailsModalOpen(true)
-            }}
             onReject={(request) => {
               setSelectedRequest(request)
               setIsRejectionModalOpen(true)
@@ -200,18 +158,11 @@ export default function NetworkApprovalPage(): React.ReactElement {
         </TabsContent>
       </Tabs>
 
-      <BlockReqDetailsModal
-        isOpen={isDetailsModalOpen}
-        onOpenChange={setIsDetailsModalOpen}
-        request={selectedRequest}
-      />
 
       <BlockReqRejectionModal
         isOpen={isRejectionModalOpen}
         onOpenChange={setIsRejectionModalOpen}
         request={selectedRequest}
-        rejectionReason={rejectionReason}
-        onReasonChange={setRejectionReason}
         onConfirm={handleReject}
       />
     </div>

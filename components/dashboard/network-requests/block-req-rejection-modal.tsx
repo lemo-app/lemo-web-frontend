@@ -1,60 +1,43 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { BlockRequest } from "@/utils/interface/block-request.types"
+import { XCircle } from "lucide-react"
 
 interface BlockReqRejectionModalProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   request: BlockRequest | null
-  rejectionReason: string
-  onReasonChange: (reason: string) => void
   onConfirm: () => void
 }
 
-export function BlockReqRejectionModal({ 
-  isOpen, 
-  onOpenChange, 
-  request, 
-  rejectionReason,
-  onReasonChange,
-  onConfirm 
+export function BlockReqRejectionModal({
+  isOpen,
+  onOpenChange,
+  request,
+  onConfirm,
 }: BlockReqRejectionModalProps) {
-  if (!request) return null
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Reject Request</DialogTitle>
-          <DialogDescription>Please provide a reason for rejecting this blocking request.</DialogDescription>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="flex items-center gap-2">
+            <XCircle className="h-5 w-5 text-destructive" />
+            Confirm Rejection
+          </DialogTitle>
+          <DialogDescription className="text-sm">
+            Are you sure you want to reject the block request for{" "}
+            <span className="font-medium break-all">{request?.site_url}</span>?
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium">Site to reject</h3>
-            <p className="text-sm">{request.site_url}</p>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="rejection-reason" className="text-sm font-medium">
-              Rejection Reason
-            </label>
-            <Textarea
-              id="rejection-reason"
-              className="min-h-[100px]"
-              placeholder="Enter reason for rejection..."
-              value={rejectionReason}
-              onChange={(e) => onReasonChange(e.target.value)}
-            />
-          </div>
-          <div className="flex justify-between pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={onConfirm} disabled={!rejectionReason.trim()}>
-              Confirm Rejection
-            </Button>
-          </div>
-        </div>
+        
+        <DialogFooter className="mt-4">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Confirm Rejection
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

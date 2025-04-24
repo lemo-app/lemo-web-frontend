@@ -6,9 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner"
 import { sendBlockReq } from "@/utils/client-api"
 import { User } from "@/utils/interface/user.types"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface SubmitBlockReqModalProps {
-user: User
+  user: User
   isOpen: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -17,7 +18,8 @@ export function SubmitBlockReqModal({ user, isOpen, onOpenChange }: SubmitBlockR
   const [siteLink, setSiteLink] = useState("")
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-    console.log(user)
+  const queryClient = useQueryClient()
+
   const handleSubmit = async () => {
     if (!siteLink || !reason) {
       toast.error("Please fill in all fields")
@@ -27,7 +29,9 @@ export function SubmitBlockReqModal({ user, isOpen, onOpenChange }: SubmitBlockR
     try {
       setIsSubmitting(true)
       await sendBlockReq(siteLink, reason, user._id, user.school._id)
-      toast.success("Block request submitted successfully")
+      toast.success("Block request sent successfully")
+      // Invalidate and refetch block requests
+      queryClient.invalidateQueries({ queryKey: ['blockRequests', user.school._id] })
       // Reset form
       setSiteLink("")
       setReason("")

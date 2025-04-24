@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Save, Loader2 } from "lucide-react";
+import { Clock, Save, Loader2, AlertTriangle } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCurrentUser, updateSchool } from "@/utils/client-api";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 // Helper function to convert ISO time to HTML time input format (HH:MM)
 const formatISOToTimeInput = (isoString?: string): string => {
@@ -92,6 +93,11 @@ const SchoolDetails = () => {
     });
   }, [formData, initialData]);
 
+  // Check if time fields are missing
+  const hasMissingTime = useMemo(() => {
+    return !formData.start_time || !formData.end_time;
+  }, [formData.start_time, formData.end_time]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -160,6 +166,14 @@ const SchoolDetails = () => {
           )}
         </Button>
       </div>
+
+      {hasMissingTime && (
+        <div className="flex items-center gap-2 p-3 text-red-600 bg-red-50 rounded-md">
+          <AlertTriangle className="h-5 w-5" />
+          <p className="text-sm">Please set both start time and end time for your school hours.</p>
+        </div>
+      )}
+
       <div className="space-y-4">
         <div className="space-y-2">
           <Label className="text-muted-foreground">School Name</Label>
@@ -206,23 +220,39 @@ const SchoolDetails = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Start Time</Label>
+            <Label className={cn(
+              "text-muted-foreground",
+              !formData.start_time && "text-red-500"
+            )}>
+              Start Time {!formData.start_time && "*"}
+            </Label>
             <Input
               id="start_time"
               type="time"
               value={formData.start_time}
               onChange={handleChange}
-              className="w-full"
+              className={cn(
+                "w-full",
+                !formData.start_time && "border-red-500 focus-visible:ring-red-500"
+              )}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground">End Time</Label>
+            <Label className={cn(
+              "text-muted-foreground",
+              !formData.end_time && "text-red-500"
+            )}>
+              End Time {!formData.end_time && "*"}
+            </Label>
             <Input
               id="end_time"
               type="time"
               value={formData.end_time}
               onChange={handleChange}
-              className="w-full"
+              className={cn(
+                "w-full",
+                !formData.end_time && "border-red-500 focus-visible:ring-red-500"
+              )}
             />
           </div>
         </div>
