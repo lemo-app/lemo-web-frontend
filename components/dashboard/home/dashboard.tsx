@@ -54,8 +54,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-5">
-        <Card className="md:col-span-3">
+      <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-0">
               <CardTitle>Trends</CardTitle>
@@ -140,40 +139,9 @@ export default function Dashboard() {
               <AttendanceChart />
             </div>
           </CardContent>
-        </Card>
-        <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-0">
-              <CardTitle>Site Request Blocked</CardTitle>
-              <CardDescription>Based on this week</CardDescription>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Download Report</DropdownMenuItem>
-                <DropdownMenuItem>Share</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </CardHeader>
-          <CardContent>
-            <BlockedSitesChart />
-          </CardContent>
-        </Card>
-      </div>
-      {/* Additional Components */}
-      <div className="grid gap-6 md:grid-cols-5 mt-6">
-        <Card className="md:col-span-3">
-          <ViolationsTable />
-        </Card>
-        <div className="md:col-span-2">
-          <SocialNetworkVisits />
-        </div>
-      </div>
+      </Card>
+      {/*  */}
+      <ViolationsTable />
     </main>
   )
 }
