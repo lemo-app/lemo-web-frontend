@@ -44,7 +44,8 @@ const queryClient = useQueryClient();
       toast.success('Student profile updated successfully!');
       onClose();
     } catch (error) {
-      console.error('Error updating student profile:', error);
+      toast.error('Failed to update student profile. Please try again.');
+      // console.error('Error updating student profile:', error);
     }
   };
 

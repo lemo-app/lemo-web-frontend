@@ -104,7 +104,7 @@ export default function Schools() {
       setEditingSchool(null); // Clear editing state
     },
     onError: (error) => {
-      console.error('Failed to update school:', error);
+      // console.error('Failed to update school:', error);
       toast.error('Failed to update school');
     }
   });
@@ -206,7 +206,7 @@ export default function Schools() {
 
   // Handle error
   if (isError) {
-    console.error('Error fetching schools:', error);
+    // console.error('Error fetching schools:', error);
     toast.error('Failed to load schools data');
   }
 

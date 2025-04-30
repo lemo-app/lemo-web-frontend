@@ -115,7 +115,7 @@ const EditStaffModal = ({ staff, isOpen, onClose }: EditStaffModalProps) => {
           updatedStaffData.avatar_url = avatarUrl;
         } catch (error) {
           toast.error("Failed to upload avatar");
-          console.error("Avatar upload error:", error);
+          // console.error("Avatar upload error:", error);
         }
       }
 
@@ -128,7 +128,7 @@ const EditStaffModal = ({ staff, isOpen, onClose }: EditStaffModalProps) => {
       toast.success('Staff updated successfully');
       onClose();
     } catch (error) {
-      console.error("Error updating staff:", error);
+      // console.error("Error updating staff:", error);
       toast.error("Failed to update staff information");
     } finally {
       setIsSubmitting(false);

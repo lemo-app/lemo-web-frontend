@@ -116,7 +116,7 @@ export default function ManageAdmins() {
 
   // Handle error
   if (isError && error) {
-    console.error('Error fetching admins:', error);
+    // console.error('Error fetching admins:', error);
     toast.error('Failed to load admins data');
   }
 

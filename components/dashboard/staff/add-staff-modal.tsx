@@ -76,7 +76,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
         setCurrentUserSchoolName(response.data.school.school_name)
       }
     } catch (err) {
-      console.error("Error fetching current user info:", err)
+      // console.error("Error fetching current user info:", err)
       toast.error("Could not retrieve your user information.")
     } finally {
       setIsLoadingUserData(false)
@@ -92,7 +92,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
           try {
             setCustomRoles(JSON.parse(savedRoles))
           } catch (error) {
-            console.error("Failed to parse custom roles:", error)
+            // console.error("Failed to parse custom roles:", error)
             setCustomRoles([])
           }
         }
@@ -186,7 +186,7 @@ export function AddStaffModal({ isOpen, onClose, userType }: AddStaffModalProps)
       setSchoolSearch("")
       onClose()
     } catch (err) {
-      console.error("Error creating staff:", err)
+      // console.error("Error creating staff:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to create staff member"
       setError(errorMessage)
       toast.error(`Failed to add staff: ${errorMessage}`)

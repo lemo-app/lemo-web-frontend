@@ -72,7 +72,7 @@ export default function NetworkApprovalPage(): React.ReactElement {
       setSelectedRequest(null)
     },
     onError: (error) => {
-      console.error('Error updating request:', error)
+      // console.error('Error updating request:', error)
       toast.error('Failed to update request')
     }
   })

@@ -293,7 +293,7 @@ export default function ManageStudents() {
       // Invalidate and refetch the students query
       queryClient.invalidateQueries({ queryKey: ["students"] });
     } catch (error) {
-      console.error("Error deleting student:", error);
+      // console.error("Error deleting student:", error);
       toast.error("Failed to delete student. Please try again.");
     } finally {
       setIsDeleting(false);

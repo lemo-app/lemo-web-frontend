@@ -38,7 +38,7 @@ export const AddFacultyModal = ({ open, onOpenChange, currentUserSchool, current
           try {
             setCustomJobTitles(JSON.parse(savedTitles));
           } catch (error) {
-            console.error("Failed to parse custom job titles:", error);
+            // console.error("Failed to parse custom job titles:", error);
             setCustomJobTitles([]);
           }
         }
@@ -116,7 +116,7 @@ export const AddFacultyModal = ({ open, onOpenChange, currentUserSchool, current
       setJobTitle("");
       onOpenChange(false);
     } catch (err) {
-      console.error("Error adding faculty member:", err);
+      // console.error("Error adding faculty member:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to add faculty member";
       toast.error(errorMessage);
     } finally {

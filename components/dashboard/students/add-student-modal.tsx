@@ -96,7 +96,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
           try {
             setCustomSections(JSON.parse(savedSections));
           } catch (error) {
-            console.error("Failed to parse custom sections:", error);
+            // console.error("Failed to parse custom sections:", error);
             setCustomSections([]);
           }
         }
@@ -249,7 +249,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
           console.log('Image uploaded successfully:', avatarUrl);
           setIsUploading(false);
         } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
+          // console.error('Error uploading image:', uploadError);
           toast.error("Failed to upload profile image");
           setIsUploading(false);
           setIsSubmitting(false);

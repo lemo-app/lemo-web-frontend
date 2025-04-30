@@ -37,7 +37,7 @@ export const signup = async (email: string, type: string, jobTitle?: string) => 
     const response = await apiClient.post('/auth/signup', data);
     return response.data;
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('Signup error:');
     throw error;
   }
 };
@@ -51,7 +51,7 @@ export const connectStaffToSchool = async (userEmail: string, schoolId: string) 
     });
     return response.data;
   } catch (error) {
-    console.error('Connect staff to school error:', error);
+    console.error('Connect staff to school error:');
     throw error;
   }
 };
@@ -66,7 +66,7 @@ export const login = async (email: string, password: string) => {
     document.cookie = `token=${response.data.token}; path=/`; // Store token in cookies
     return response.data;
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error:');
     throw error;
   }
 };
@@ -82,7 +82,7 @@ export const verifyEmail = async (email: string, tempPassword: string, newPasswo
     });
     return response.data;
   } catch (error) {
-    console.error('Verify email error:', error);
+    console.error('Verify email error:');
     throw error;
   }
 };
@@ -104,7 +104,7 @@ export const updateUserInfo = async (userInfo: UserInfo, user_id: string) => {
     const response = await apiClient.patch(`/users/${user_id}`, userInfo);
     return response.data;
   } catch (error) {
-    console.error('Update user info error:', error);
+    console.error('Update user info error:');
     throw error;
   }
 };
@@ -121,7 +121,7 @@ export const uploadFile = async (file: File) => {
     });
     return response.data.file_url;
   } catch (error) {
-    console.error('File upload error:', error);
+    console.error('File upload error:');
     if (axios.isAxiosError(error)) {
       // More specific error handling
       if (error.response) {
@@ -149,7 +149,7 @@ export const updateUserProfile = async (fullName?: string, avatarUrl?: string, j
     const response = await apiClient.patch('/users/me', data);
     return response.data;
   } catch (error) {
-    console.error('Update user profile error:', error);
+    console.error('Update user profile error:');
     throw error;
   }
 };
@@ -165,7 +165,7 @@ export const createSchool = async (school: Omit<School, '_id' | 'createdAt'>) =>
     
     return response.data;
   } catch (error) {
-    console.error('Create school error:', error);
+    console.error('Create school error:');
     throw error;
   }
 };
@@ -176,7 +176,7 @@ export const generateSchoolQRCode = async (schoolId: string) => {
     const response = await apiClient.get(`/schools/generate-qr/${schoolId}`);
     return response.data;
   } catch (error) {
-    console.error('Generate QR code error:', error);
+    console.error('Generate QR code error:');
     throw error;
   }
 };
@@ -223,7 +223,7 @@ export const fetchSchools = async ({
     const response = await apiClient.get(`/schools?${params?.toString()}`);
     return response.data;
   } catch (error) {
-    console.error('Fetch schools error:', error);
+    console.error('Fetch schools error:');
     throw error;
   }
 };
@@ -236,7 +236,7 @@ export const storeSchoolQRCode = async (schoolId: string, qrCodeUrl: string) => 
     });
     return response.data;
   } catch (error) {
-    console.error('Store QR code error:', error);
+    console.error('Store QR code error:');
     throw error;
   }
 };
@@ -247,7 +247,7 @@ export const updateSchool = async (schoolId: string, schoolData: Partial<Omit<Sc
     const response = await apiClient.put(`/schools/${schoolId}`, schoolData);
     return response.data;
   } catch (error) {
-    console.error('Update school error:', error);
+    console.error('Update school error:');
     throw error;
   }
 };
@@ -258,7 +258,7 @@ export const deleteSchool = async (schoolId: string) => {
     const response = await apiClient.delete(`/schools/${schoolId}`);
     return response.data;
   } catch (error) {
-    console.error('Delete school error:', error);
+    console.error('Delete school error:');
     throw error;
   }
 };
@@ -320,7 +320,7 @@ export const fetchUsers = async ({
     const response = await apiClient.get(`/users/all?${params?.toString()}`);
     return response.data;
   } catch (error) {
-    console.error('Fetch users error:', error);
+    console.error('Fetch users error:');
     throw error;
   }
 };
@@ -331,7 +331,7 @@ export const deleteUser = async (userId: string) => {
     const response = await apiClient.delete(`/users/${userId}`);
     return response.data;
   } catch (error) {
-    console.error('Delete user error:', error);
+    console.error('Delete user error:');
     throw error;
   }
 };
@@ -341,7 +341,7 @@ export const fetchCurrentUser = async () => {
     const response = await apiClient.get('/users/me');
     return response.data;
   } catch (error) {
-    console.error('Error fetching current user:', error);
+    console.error('Error fetching current user:');
     throw error;
   }
 };
@@ -352,7 +352,7 @@ export const fetchSchoolById = async (schoolId: string) => {
     const response = await apiClient.get(`/schools/${schoolId}`);
     return response.data;
   } catch (error) {
-    console.error('Fetch school by ID error:', error);
+    console.error('Fetch school by ID error:');
     throw error;
   }
 };
@@ -368,7 +368,7 @@ export const sendBlockReq = async (siteUrl: string, reason: string, user_id: str
     });
     return response.data;
   } catch (error) {
-    console.error('Send block request error:', error);
+    console.error('Send block request error:');
     if (axios.isAxiosError(error)) {
       toast.error(error.response?.data?.message || 'Failed to submit block request');
     }
@@ -383,7 +383,7 @@ export const fetchBlockRequests = async (queryParams?: string) => {
     const response = await apiClient.get(url);
     return response.data;
   } catch (error) {
-    console.error('Fetch block requests error:', error);
+    console.error('Fetch block requests error:');
     if (axios.isAxiosError(error)) {
       toast.error(error.response?.data?.message || 'Failed to fetch block requests');
     }
@@ -399,7 +399,7 @@ export const updateBlockRequest = async (requestId: string, status: 'pending' | 
     });
     return response.data;
   } catch (error) {
-    console.error('Update block request error:', error);
+    console.error('Update block request error:');
     if (axios.isAxiosError(error)) {
       toast.error(error.response?.data?.message || 'Failed to update block request');
     }
@@ -434,7 +434,7 @@ export const fetchDashboardCardMetrics = async ({
     const response = await apiClient.get(`/dashboard/card-metrics?${params.toString()}`);
     return response.data;
   } catch (error) {
-    console.error('Fetch dashboard card metrics error:', error);
+    console.error('Fetch dashboard card metrics error:');
     throw error;
   }
 };
@@ -465,7 +465,7 @@ export const fetchDashboardTrends = async ({
     const response = await apiClient.get(`/dashboard/trends?${params.toString()}`);
     return response.data;
   } catch (error) {
-    console.error('Fetch dashboard trends error:', error);
+    console.error('Fetch dashboard trends error:');
     throw error;
   }
 };
@@ -499,7 +499,7 @@ export const fetchDashboardViolations = async ({
     const response = await apiClient.get(`/dashboard/violations?${params.toString()}`);
     return response.data;
   } catch (error) {
-    console.error('Fetch dashboard violations error:', error);
+    console.error('Fetch dashboard violations error:');
     throw error;
   }
 };

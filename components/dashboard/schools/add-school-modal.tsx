@@ -99,7 +99,7 @@ export function AddSchoolModal({ isOpen, onClose, userType }: AddSchoolModalProp
           logoUrl = await uploadFile(logoFile)
         } catch (error) {
           toast.error("Failed to upload logo! Please try again later.")
-          console.error("Logo upload error:", error)
+          // console.error("Logo upload error:", error)
           setIsSubmitting(false)
           return
         }
@@ -111,7 +111,7 @@ export function AddSchoolModal({ isOpen, onClose, userType }: AddSchoolModalProp
           vpnConfigUrl = await uploadFile(vpnConfigFile)
         } catch (error) {
           toast.error("Failed to upload VPN configuration file! Please try again later.")
-          console.error("VPN config upload error:", error)
+          // console.error("VPN config upload error:", error)
           setIsSubmitting(false)
           return
         }
@@ -157,7 +157,7 @@ export function AddSchoolModal({ isOpen, onClose, userType }: AddSchoolModalProp
           toast.success("School created successfully, but QR code generation didn't return a URL");
         }
       } catch (qrError) {
-        console.error("QR code generation error:", qrError);
+        // console.error("QR code generation error:", qrError);
         toast.warning("School created successfully, but QR code generation failed");
       }
 
@@ -178,7 +178,7 @@ export function AddSchoolModal({ isOpen, onClose, userType }: AddSchoolModalProp
       onClose()
     } catch (error) {
       toast.error("Failed to create school! Please try again later.")
-      console.error(error)
+      // console.error(error)
     } finally {
       setIsSubmitting(false)
     }

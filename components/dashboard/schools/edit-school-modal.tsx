@@ -163,7 +163,7 @@ const EditSchoolModal = ({
           updatedSchoolData.logo_url = logoUrl;
         } catch (error) {
           toast.error("Failed to upload logo");
-          console.error("Logo upload error:", error);
+          // console.error("Logo upload error:", error);
         }
       }
 
@@ -174,7 +174,7 @@ const EditSchoolModal = ({
           updatedSchoolData.vpn_config_url = vpnConfigUrl;
         } catch (error) {
           toast.error("Failed to upload VPN configuration file");
-          console.error("VPN config upload error:", error);
+          // console.error("VPN config upload error:", error);
         }
       }
 
@@ -196,7 +196,7 @@ const EditSchoolModal = ({
       toast.success('School updated successfully');
       onClose();
     } catch (error) {
-      console.error("Error updating school:", error);
+      // console.error("Error updating school:", error);
       toast.error("Failed to update school");
     } finally {
       setIsSubmitting(false);

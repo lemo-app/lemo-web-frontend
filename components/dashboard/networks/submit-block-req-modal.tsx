@@ -40,7 +40,8 @@ export function SubmitBlockReqModal({ user, isOpen, onOpenChange }: SubmitBlockR
       // Close modal
       onOpenChange(false)
     } catch (error) {
-      console.error("Error submitting block request:", error)
+      toast.error("Failed to send block request")
+      // console.error("Error submitting block request:", error)
     } finally {
       setIsSubmitting(false)
     }

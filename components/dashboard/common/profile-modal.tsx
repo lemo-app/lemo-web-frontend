@@ -107,7 +107,7 @@ export function ProfileModal({ isOpen, onClose, user }: UpdateUserModalProps) {
       onClose();
     } catch (error) {
       toast.error("Failed to update profile! Please try again later.");
-      console.error(error);
+      // console.error(error);
     } finally {
       setIsSubmitting(false);
     }

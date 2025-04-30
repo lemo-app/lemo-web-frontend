@@ -46,9 +46,9 @@ export function LoginForm({
 
       router.push("/dashboard");
     } catch (error: any) {
-      // console.error("Login failed:", error.response.data ?? error);
+      // console.error("Login failed:", error.response.data );
       toast.error(
-        error.response?.data ?? "Something went wrong. Please try again."
+        error.response.data.message || "Login failed. Please try again."
       );
     } finally {
       setLoading(false);
