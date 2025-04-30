@@ -19,6 +19,7 @@ import ViewStaffModal from "@/components/dashboard/staff/view-staff-modal"
 import EditStaffModal from "@/components/dashboard/staff/edit-staff-modal"
 import DeleteStaffModal from "@/components/dashboard/staff/delete-staff-modal"
 import { AddStaffModal } from "@/components/dashboard/staff/add-staff-modal"
+import PermissionBanner from "@/components/dashboard/common/permission-banner"
 
 // Extend the UserType to include job_title which is returned from the API
 
@@ -294,12 +295,7 @@ export default function ManageStaff() {
       />
       
       {/* Permission info banner for non-super-admin users */}
-      {!isLoadingUser && !isSuperAdmin && (
-        <div className="bg-blue-50 text-blue-700 p-4 rounded-md flex items-center gap-2 text-sm">
-          <InfoIcon className="h-5 w-5 flex-shrink-0" />
-          <p>You can only view and manage team members associated with your school.</p>
-        </div>
-      )}
+      <PermissionBanner isLoadingUser={isLoadingUser} isSuperAdmin={isSuperAdmin} school_name={currentUser?.school?.school_name} text={'You can only view and manage team members associated with'} />
 
       <div className="flex items-center justify-between gap-2">
         <div className="relative bg-white w-full">

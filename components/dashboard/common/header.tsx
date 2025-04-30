@@ -30,8 +30,8 @@ const Header: React.FC = () => {
   const isProfileCompleted = useUserStore((state) => state.isProfileCompleted); // Get the isProfileCompleted state from the store
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  console.log(userData, " userStoreData");
-  console.log(isProfileCompleted, " isProfileCompleted");
+  // console.log(userData, " userStoreData");
+  // console.log(isProfileCompleted, " isProfileCompleted");
 
   useEffect(() => {
     if (!isProfileCompleted) {

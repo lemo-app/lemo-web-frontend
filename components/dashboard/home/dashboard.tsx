@@ -1,7 +1,8 @@
 "use client"
 
 import { MoreVertical } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +13,54 @@ import { BlockedSitesChart } from "@/components/dashboard/home/blocked-sites-cha
 import { StatCard } from "@/components/dashboard/home/stat-card"
 import { ViolationsTable } from "@/components/dashboard/home/violations-table"
 import { SocialNetworkVisits } from "@/components/dashboard/home/social-network-visits"
+import { fetchCurrentUser, fetchDashboardCardMetrics } from "@/utils/client-api"
 
 export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState("all")
+
+  // Map tab value to API range
+  const rangeMap: Record<string, string> = {
+    all: "All Date",
+    "12m": "12 Months",
+    "30d": "30 Days",
+    "7d": "7 Days",
+    "24h": "24 Hours",
+  }
+
+  // Fetch current user
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: fetchCurrentUser,
+    staleTime: 1000 * 60 * 15,
+  })
+
+  // Fetch dashboard card metrics
+  const {
+    data: cardMetrics,
+    isLoading: isLoadingMetrics,
+    refetch: refetchMetrics,
+  } = useQuery({
+    queryKey: [
+      "dashboardCardMetrics",
+      userData?.type,
+      timeFilter,
+      userData?.school?._id,
+    ],
+    queryFn: () =>
+      fetchDashboardCardMetrics({
+        userType: userData?.type || "",
+        range: rangeMap[timeFilter] || "All Date",
+        schoolId: userData?.school?._id,
+      }),
+    enabled: !!userData?.type && (userData?.type === "super_admin" || !!userData?.school?._id),
+  })
+
+  // Refetch metrics when filter changes
+  useEffect(() => {
+    if (userData?.type) {
+      refetchMetrics()
+    }
+  }, [timeFilter, userData?.type, userData?.school?._id])
 
   return (
     <main>
@@ -39,7 +85,7 @@ export default function Dashboard() {
               7 Days
             </TabsTrigger>
             <TabsTrigger value="24h" className="text-xs sm:text-sm">
-              24 Hour
+              24 Hours
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -47,10 +93,30 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <StatCard title="Total Students" value="1,920" icon="users" color="amber" />
-        <StatCard title="Late/Early Leaves" value="501" icon="clock" color="blue" />
-        <StatCard title="Blocked Sites" value="1,400" icon="shield" color="teal" />
-        <StatCard title="Pending Requests" value="19" icon="alert-circle" color="rose" />
+        <StatCard
+          title="Total Students"
+          value={isLoadingMetrics ? "..." : cardMetrics?.total_students?.toLocaleString() ?? "..."}
+          icon="users"
+          color="amber"
+        />
+        <StatCard
+          title="Late/Early Leaves"
+          value={isLoadingMetrics ? "..." : cardMetrics?.late_early_leave?.toLocaleString() ?? "..."}
+          icon="clock"
+          color="blue"
+        />
+        <StatCard
+          title="Blocked Sites"
+          value={isLoadingMetrics ? "..." : cardMetrics?.blocked_sites?.toLocaleString() ?? "..."}
+          icon="shield"
+          color="teal"
+        />
+        <StatCard
+          title="Pending Requests"
+          value={isLoadingMetrics ? "..." : cardMetrics?.pending_requests?.toLocaleString() ?? "..."}
+          icon="alert-circle"
+          color="rose"
+        />
       </div>
 
       {/* Charts */}

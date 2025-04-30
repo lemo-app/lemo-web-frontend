@@ -407,6 +407,38 @@ export const updateBlockRequest = async (requestId: string, status: 'pending' | 
   }
 };
 
+// Dashboard card metrics API
+export interface DashboardCardMetrics {
+  total_students: number;
+  late_early_leave: number;
+  blocked_sites: number;
+  pending_requests: number;
+}
+
+export const fetchDashboardCardMetrics = async ({
+  userType,
+  range,
+  schoolId,
+}: {
+  userType: string;
+  range: string;
+  schoolId?: string;
+}): Promise<DashboardCardMetrics> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('user_type', userType);
+    params.append('range', range);
+    if (userType !== 'super_admin' && schoolId) {
+      params.append('school', schoolId);
+    }
+    const response = await apiClient.get(`/dashboard/card-metrics?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch dashboard card metrics error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 

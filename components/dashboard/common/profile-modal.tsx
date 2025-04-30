@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { Camera, Loader2, User } from "lucide-react";
 import { uploadFile, updateUserProfile } from "@/utils/client-api";
 import { useUserStore } from "@/utils/store/user-store";
-import {  User as UserType } from "@/utils/interface/user.types";
+import { User as UserType } from "@/utils/interface/user.types";
 
 interface UpdateUserModalProps {
   isOpen: boolean;
@@ -27,13 +27,8 @@ interface UpdateUserModalProps {
   user: UserType;
 }
 
-export function ProfileModal({
-  isOpen,
-  onClose,
-  user,
-}: UpdateUserModalProps) {
+export function ProfileModal({ isOpen, onClose, user }: UpdateUserModalProps) {
   const setUser = useUserStore((state) => state.setUser); // Get the setUser function from the store
-
   const [name, setName] = useState(user.full_name || "");
   const [email, setEmail] = useState(user.email);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(
@@ -43,24 +38,31 @@ export function ProfileModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const schoolName = useMemo(() => {
+    if (user?.school) {
+      return user?.school?.school_name;
+    }
+    return "";
+  }, [user?.school]);
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // console.log("user", user);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file size (e.g., max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        toast.error('File is too large. Maximum size is 5MB.');
+        toast.error("File is too large. Maximum size is 5MB.");
         return;
       }
-  
+
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
       if (!allowedTypes.includes(file.type)) {
-        toast.error('Invalid file type. Please upload JPEG, PNG, or GIF.');
+        toast.error("Invalid file type. Please upload JPEG, PNG, or GIF.");
         return;
       }
-  
+
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = () => {
@@ -165,6 +167,19 @@ export function ProfileModal({
           </div>
 
           <div className="space-y-4">
+            {/* School name related to the user - admin / school_manager */}
+            <div>
+              <Label htmlFor="school" className="text-base font-medium">
+                School Name
+              </Label>
+              <Input
+                id="school"
+                value={schoolName}
+                disabled
+                className="h-12 mt-2 text-base bg-gray-50"
+              />
+            </div>
+
             <div>
               <Label htmlFor="name" className="text-base font-medium">
                 Full Name*
@@ -198,7 +213,8 @@ export function ProfileModal({
               <Label className="text-base font-medium">Account Type</Label>
               <Input
                 value={
-                  user?.type?.charAt(0)?.toUpperCase() + user?.type?.toUpperCase()?.slice(1)
+                  user?.type?.charAt(0)?.toUpperCase() +
+                  user?.type?.toUpperCase()?.slice(1)
                 }
                 className="h-12 mt-2 text-base bg-gray-50"
                 disabled

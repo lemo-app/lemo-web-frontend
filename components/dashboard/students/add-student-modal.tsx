@@ -59,7 +59,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
 
   // Check user roles
   const isSuperAdmin = userData?.type === 'super_admin';
-  const userSchoolId = userData?.school;
+  const userSchoolId = userData?.school?._id;
   const userSchoolName = userData?.school_name || "Your School";
 
   // Fetch schools for super admin

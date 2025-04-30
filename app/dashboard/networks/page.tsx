@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { SubmitBlockReqModal } from "@/components/dashboard/networks/submit-block-req-modal"
 import { useQuery } from "@tanstack/react-query"
 import { fetchCurrentUser, fetchBlockRequests } from "@/utils/client-api"
-import { Loader2, Globe, User, Clock } from "lucide-react"
+import { Loader2, Globe, User, Clock, Shield } from "lucide-react"
 import { User as UserType } from "@/utils/interface/user.types"
 import { BlockRequest } from "@/utils/interface/block-request.types"
 import { Badge } from "@/components/ui/badge"
+import PermissionBanner from "@/components/dashboard/common/permission-banner"
 
 export default function NetworksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -69,16 +70,21 @@ export default function NetworksPage() {
         <p className="text-muted-foreground">Configure and monitor network settings</p>
       </div>
       
-      <Card className="mb-6">
+      <PermissionBanner 
+        isLoadingUser={isLoadingUser}
+        isSuperAdmin={false}
+        school_name={currentUser?.school?.school_name}
+        text={"Network management is limited to"}
+      />
+
+      <Card className="my-6">
         <CardHeader>
           <CardTitle>Network Blocking</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center text-center p-8 space-y-4">
             <div className="rounded-full bg-blue-100 p-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-              </svg>
+              <Shield className="h-8 w-8 text-blue-500" />
             </div>
             <h3 className="text-xl font-semibold">Automated Site Blocking Coming Soon</h3>
             <p className="text-muted-foreground max-w-md">

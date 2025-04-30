@@ -50,7 +50,7 @@ export default function Sidebar() {
 
   const isActive = (path: string) => isMounted && pathname === path
   const canAccess = (types: string[]) => types.includes(user.type)
-
+  
   // Group navigation items for better organization
   const navigationGroups = [
     {
