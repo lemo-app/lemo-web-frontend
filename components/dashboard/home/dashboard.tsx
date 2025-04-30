@@ -14,6 +14,7 @@ import { StatCard } from "@/components/dashboard/home/stat-card"
 import { ViolationsTable } from "@/components/dashboard/home/violations-table"
 import { SocialNetworkVisits } from "@/components/dashboard/home/social-network-visits"
 import { fetchCurrentUser, fetchDashboardCardMetrics } from "@/utils/client-api"
+import { User } from "@/utils/interface/user.types"
 
 export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState("all")
@@ -28,7 +29,7 @@ export default function Dashboard() {
   }
 
   // Fetch current user
-  const { data: userData, isLoading: isLoadingUser } = useQuery({
+  const { data: userData, isLoading: isLoadingUser } = useQuery<User>({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     staleTime: 1000 * 60 * 15,
@@ -67,8 +68,8 @@ export default function Dashboard() {
       {/* Welcome */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Welcome Back Jay</h1>
-          <p className="text-muted-foreground">Find all analytics of your necessary role here</p>
+          <h1 className="text-2xl ">Welcome Back <span className="font-semibold">{userData?.full_name}</span> </h1>
+          <p className="text-muted-foreground">Find all analytics of your necessary role here {userData?.school?.school_name ? <span className=" font-semibold"> about {userData?.school?.school_name}</span> : '' }</p>
         </div>
         <Tabs defaultValue="all" className="w-auto" value={timeFilter} onValueChange={setTimeFilter}>
           <TabsList className="grid grid-cols-5 w-auto">

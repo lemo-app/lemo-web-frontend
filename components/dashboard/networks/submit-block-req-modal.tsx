@@ -32,6 +32,8 @@ export function SubmitBlockReqModal({ user, isOpen, onOpenChange }: SubmitBlockR
       toast.success("Block request sent successfully")
       // Invalidate and refetch block requests
       queryClient.invalidateQueries({ queryKey: ['blockRequests', user.school._id] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardCardMetrics', user.school._id] })
+      
       // Reset form
       setSiteLink("")
       setReason("")
