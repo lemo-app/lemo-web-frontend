@@ -168,17 +168,19 @@ export function ProfileModal({ isOpen, onClose, user }: UpdateUserModalProps) {
 
           <div className="space-y-4">
             {/* School name related to the user - admin / school_manager */}
-            <div>
-              <Label htmlFor="school" className="text-base font-medium">
-                School Name
-              </Label>
-              <Input
-                id="school"
-                value={schoolName}
-                disabled
-                className="h-12 mt-2 text-base bg-gray-50"
-              />
-            </div>
+            {
+              user?.type === "admin" ||
+              user?.type === "school_manager" ? (
+                <div>
+                  <Label className="text-base font-medium">School Name</Label>
+                  <Input
+                    value={schoolName}
+                    className="h-12 mt-2 text-base bg-gray-50"
+                    disabled
+                  />
+                </div>
+              ) : null
+            }
 
             <div>
               <Label htmlFor="name" className="text-base font-medium">
@@ -214,7 +216,7 @@ export function ProfileModal({ isOpen, onClose, user }: UpdateUserModalProps) {
               <Input
                 value={
                   user?.type?.charAt(0)?.toUpperCase() +
-                  user?.type?.toUpperCase()?.slice(1)
+                  user?.type?.toUpperCase()?.slice(1)?.replace("_", " ")
                 }
                 className="h-12 mt-2 text-base bg-gray-50"
                 disabled

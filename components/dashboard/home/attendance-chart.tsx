@@ -1,27 +1,37 @@
 "use client"
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { useMemo } from "react";
 
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+interface AttendanceChartProps {
+  data: { name: string; regular: number; lateEarly: number }[];
+  year: number;
+  onYearChange?: (year: number) => void;
+  availableYears?: number[];
+  loading?: boolean;
+}
 
-const data = months.map((month, index) => {
-  // More consistent values to ensure visible lines
-  const regular = 500 + Math.sin(index * 0.5) * 200 + Math.random() * 100
-  const lateEarly = 400 + Math.cos(index * 0.5) * 150 + Math.random() * 100
+export function AttendanceChart({ data, year, onYearChange, availableYears = [], loading }: AttendanceChartProps) {
+  // Calculate min/max for dynamic Y axis
+  const { minY, maxY, ticks } = useMemo(() => {
+    if (!data || data.length === 0) return { minY: 0, maxY: 10, ticks: [0, 2, 4, 6, 8, 10] };
+    const allVals = data.flatMap(d => [d.regular, d.lateEarly]);
+    let min = Math.min(...allVals);
+    let max = Math.max(...allVals);
+    if (min > 0) min = 0; // Always start at 0
+    // Add some padding
+    max = Math.ceil(max * 1.15);
+    // Calculate ticks (5 steps)
+    const step = Math.max(1, Math.ceil((max - min) / 5));
+    const ticks = Array.from({ length: 6 }, (_, i) => min + i * step);
+    return { minY: min, maxY: max, ticks };
+  }, [data]);
 
-  return {
-    name: month,
-    regular: Math.round(regular),
-    lateEarly: Math.round(lateEarly),
-    highlight: month === "Jul",
-  }
-})
-
-export function AttendanceChart() {
   return (
     <div className="h-[300px] w-full">
+      {/* Year selector moved to card header */}
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 24 }}>
           <defs>
             <linearGradient id="colorRegular" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
@@ -39,8 +49,8 @@ export function AttendanceChart() {
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => `${value}`}
-            domain={[0, 1000]}
-            ticks={[0, 200, 400, 600, 800, 1000]}
+            domain={[minY, maxY]}
+            ticks={ticks}
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -50,12 +60,12 @@ export function AttendanceChart() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                        <span className="text-xs text-muted-foreground">Regular:</span>
+                        <span className="text-xs text-muted-foreground">Attendance:</span>
                         <span className="font-bold text-xs">{payload[0].value}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                        <span className="text-xs text-muted-foreground">Late/Early Leaves:</span>
+                        <span className="text-xs text-muted-foreground">Absent:</span>
                         <span className="font-bold text-xs">{payload[1].value}</span>
                       </div>
                     </div>
@@ -98,6 +108,6 @@ export function AttendanceChart() {
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }
 

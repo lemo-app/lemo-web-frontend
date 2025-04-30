@@ -439,6 +439,37 @@ export const fetchDashboardCardMetrics = async ({
   }
 };
 
+// Dashboard trends API
+export interface DashboardTrendsItem {
+  month: string;
+  attendance: number;
+  absent: number;
+}
+
+export const fetchDashboardTrends = async ({
+  userType,
+  year,
+  schoolId,
+}: {
+  userType: string;
+  year: number;
+  schoolId?: string;
+}): Promise<DashboardTrendsItem[]> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('user_type', userType);
+    params.append('year', year.toString());
+    if (userType !== 'super_admin' && schoolId) {
+      params.append('school', schoolId);
+    }
+    const response = await apiClient.get(`/dashboard/trends?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch dashboard trends error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 
