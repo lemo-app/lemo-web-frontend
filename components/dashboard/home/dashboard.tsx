@@ -117,11 +117,15 @@ export default function Dashboard() {
             <span className="font-semibold">{userData?.full_name}</span>
           </h1>
           <p className="text-muted-foreground">
-            Find all analytics of your necessary role here
+            Find all analytics of your necessary role here {" "}
             {userData?.school?.school_name ? (
-              <span className=" font-semibold">
-                about {userData?.school?.school_name}
-              </span>
+              <>
+                about {" "}
+                <span className=" font-semibold">
+                  {userData?.school?.school_name}
+                </span>
+              </>
+             
             ) : (
               ""
             )}
@@ -230,8 +234,8 @@ export default function Dashboard() {
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               {/* attendance */}
-              <Card className="flex items-center gap-2 p-4 rounded-md shadow-sm">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400">
+              <div className="flex items-center gap-2 p-4 rounded-md border-none bg-blue-50">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-400">
                   <Calendar className="text-white p-[1px]" />
                 </div>
                 <div>
@@ -245,9 +249,9 @@ export default function Dashboard() {
                         ) ?? "0"}
                   </p>
                 </div>
-              </Card>
+              </div>
               {/* absence */}
-              <Card className="flex items-center gap-2 p-4 rounded-md shadow-sm">
+              <Card className="flex items-center gap-2 p-4 rounded-md border-none bg-amber-50">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500">
                   <PersonStanding className="text-white p-[1px]" />
                 </div>
@@ -275,7 +279,12 @@ export default function Dashboard() {
         </CardContent>
       </Card>
       {/* Violation */}
-      <ViolationsTable />
+      
+      <ViolationsTable
+        userType={userData?.type || ""}
+        year={year}
+        schoolId={userData?.school?._id}
+      />
     </main>
   );
 }

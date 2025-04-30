@@ -470,6 +470,40 @@ export const fetchDashboardTrends = async ({
   }
 };
 
+// Dashboard violations API
+export interface DashboardViolationItem {
+  rank: number;
+  student_name: string;
+  student_id: string;
+  user_id: string;
+  early_leaves: number;
+  tardy: number;
+}
+
+export const fetchDashboardViolations = async ({
+  userType,
+  year,
+  schoolId,
+}: {
+  userType: string;
+  year: number;
+  schoolId?: string;
+}): Promise<DashboardViolationItem[]> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('user_type', userType);
+    params.append('year', year.toString());
+    if (userType !== 'super_admin' && schoolId) {
+      params.append('school', schoolId);
+    }
+    const response = await apiClient.get(`/dashboard/violations?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch dashboard violations error:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
 
 
