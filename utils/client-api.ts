@@ -357,6 +357,7 @@ export const fetchSchoolById = async (schoolId: string) => {
   }
 };
 
+
 // Send block request
 export const sendBlockReq = async (siteUrl: string, reason: string, user_id: string, school_id: string) => {
   try {
@@ -500,6 +501,33 @@ export const fetchDashboardViolations = async ({
     return response.data;
   } catch (error) {
     console.error('Fetch dashboard violations error:');
+    throw error;
+  }
+};
+
+// Request forgot password
+export const requestForgotPassword = async (email: string) => {
+  try {
+    const response = await apiClient.post('/users/forgot-password-request', {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Forgot password request error:');
+    throw error;
+  }
+};
+
+// Reset password with token
+export const resetPassword = async (token: string, newPassword: string) => {
+  try {
+    const response = await apiClient.post('/users/reset-password', {
+      token,
+      new_password: newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Reset password error:');
     throw error;
   }
 };

@@ -8,6 +8,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { useState } from "react"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
+import { requestForgotPassword, resetPassword } from "@/utils/client-api"
 
 export function ForgotPasswordForm({
   className,
@@ -15,21 +16,41 @@ export function ForgotPasswordForm({
 }: React.ComponentPropsWithoutRef<"form">) {
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState("")
-  const [tempPassword, setTempPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [resetToken, setResetToken] = useState("")
 
-  const handleEmailSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // Simulate sending verification email
-    toast.success("Verification email sent!")
-    setStep(2)
+    setIsLoading(true)
+    try {
+      const response = await requestForgotPassword(email)
+      if (response.token) {
+        setResetToken(response.token)
+        toast.success("Please provide the new password")
+        setStep(2)
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to send reset instructions")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handlePasswordReset = (e: React.FormEvent<HTMLFormElement>) => {
+  const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // Simulate password reset
-    toast.success("Password reset successful!")
+    setIsLoading(true)
+    try {
+      const response = await resetPassword(resetToken, newPassword)
+      toast.success("Password reset successful!")
+      // Redirect to login page after successful reset
+      window.location.href = "/login"
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to reset password")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -56,10 +77,11 @@ export function ForgotPasswordForm({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Reset Password
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Sending..." : "Reset Password"}
             </Button>
           </div>
         </>
@@ -69,28 +91,10 @@ export function ForgotPasswordForm({
           <div className="flex flex-col items-center gap-2 text-center">
             <h1 className="text-2xl font-bold">Reset Password</h1>
             <p className="text-balance text-sm text-muted-foreground">
-              Enter the temporary password sent to your email and your new password
+              Enter your new password below
             </p>
           </div>
           <div className="grid gap-6">
-            <div className="grid gap-2 relative">
-              <Label htmlFor="temp-password">Temporary Password</Label>
-              <Input
-                id="temp-password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Temporary Password"
-                required
-                value={tempPassword}
-                onChange={(e) => setTempPassword(e.target.value)}
-              />
-              {/* <button
-                type="button"
-                className="absolute right-2 top-[30px]"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-              </button> */}
-            </div>
             <div className="grid gap-2 relative">
               <Label htmlFor="new-password">New Password</Label>
               <Input
@@ -100,6 +104,7 @@ export function ForgotPasswordForm({
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -109,8 +114,8 @@ export function ForgotPasswordForm({
                 {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
               </button>
             </div>
-            <Button type="submit" className="w-full">
-              Confirm Password
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Resetting..." : "Confirm Password"}
             </Button>
           </div>
         </>
