@@ -483,7 +483,7 @@ export default function ManageStudents() {
                   <TableCell>{student.section || "Not assigned"}</TableCell>
                   {isSuperAdmin && (
                     <TableCell>
-                      {student.school.school_name || "Not assigned"}
+                      {student?.school?.school_name || "Not assigned"}
                     </TableCell>
                   )}
                   <TableCell>
