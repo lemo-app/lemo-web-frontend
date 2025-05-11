@@ -37,14 +37,19 @@ export function LoginForm({
     setLoading(true);
     try {
       const response = await login(email, password);
-      // console.log("Login successful:", response);
+      console.log("Login successful:", response);
       document.cookie = `token=${response.token}; path=/`; // Store token in cookies
       setUser(response); // Update the user store with the response data
       if(!response.full_name){
         setIsProfileCompleted(false);
       }
 
-      router.push("/dashboard");
+      // check student or not
+      if(response.type == "student"){
+        router.push("/student-verification");
+      }else{
+        router.push("/dashboard");
+      }
     } catch (error: any) {
       // console.error("Login failed:", error.response.data );
       toast.error(
