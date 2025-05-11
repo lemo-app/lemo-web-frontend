@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { Loader2, Upload, Image as ImageIcon, X, Plus, Trash2 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import apiClient, { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserInfo, uploadFile, fetchCurrentUser } from "@/utils/client-api"
-import { User as UserType } from "@/utils/interface/user.types"
+import  { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserInfo, uploadFile, fetchCurrentUser } from "@/utils/client-api"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -45,6 +44,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
   const [newSection, setNewSection] = useState("");
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [sectionSelectOpen, setSectionSelectOpen] = useState(false);
+  const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
 
   // Fetch current user information
   const { 
@@ -122,6 +122,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
       setSelectedImage(null);
       setImagePreview(null);
       setIsAddingSection(false);
+      setSchoolSearchQuery(""); // Reset school search query
     }
   }, [isOpen, isSuperAdmin, userSchoolId]);
 
@@ -248,9 +249,9 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
           avatarUrl = await uploadFile(selectedImage);
           console.log('Image uploaded successfully:', avatarUrl);
           setIsUploading(false);
-        } catch (uploadError) {
+        } catch (error: unknown) {
           // console.error('Error uploading image:', uploadError);
-          toast.error("Failed to upload profile image");
+          toast.error(error instanceof Error ? error.message : "Failed to upload profile image");
           setIsUploading(false);
           setIsSubmitting(false);
           return;
@@ -282,9 +283,8 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
         onSuccess?.();
         onClose();
       }
-    } catch (error: unknown) {
-      console.log('error:', error)
-      toast.error("Failed to add student");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to add student");
     } finally {
       queryClient.invalidateQueries({ queryKey: ['students'] })
       setIsSubmitting(false);
@@ -337,6 +337,18 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
       </div>
     );
   };
+
+  // Filter schools based on search query
+  const filteredSchools = useMemo(() => {
+    if (!schoolSearchQuery.trim()) {
+      return schoolsData.slice(0, 3); // Show first 3 schools when no search
+    }
+    return schoolsData
+      .filter(school => 
+        school.school_name.toLowerCase().includes(schoolSearchQuery.toLowerCase())
+      )
+      .slice(0, 10); // Limit to 10 results for better performance
+  }, [schoolsData, schoolSearchQuery]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -543,21 +555,46 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
               {isSuperAdmin && (
                 <div className="grid gap-2">
                   <Label htmlFor="school">School *</Label>
-                  <Select
-                    value={formData.school}
-                    onValueChange={(value) => handleSelectChange('school', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select school" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schoolsData.map((school) => (
-                        <SelectItem key={school._id} value={school._id}>
-                          {school.school_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative">
+                    <Input
+                      placeholder="Search schools..."
+                      value={formData.school ? schoolsData.find((school) => school._id === formData.school)?.school_name : schoolSearchQuery}
+                      onChange={(e) => {
+                        setSchoolSearchQuery(e.target.value);
+                        if (formData.school) {
+                          setFormData(prev => ({ ...prev, school: "" }));
+                        }
+                      }}
+                      className="w-full"
+                    />
+                    {(schoolSearchQuery || !formData.school) && (
+                      <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md">
+                        <div className="max-h-[200px] overflow-y-auto">
+                          {filteredSchools.length === 0 ? (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              No schools found
+                            </div>
+                          ) : (
+                            filteredSchools.map((school) => (
+                              <div
+                                key={school._id}
+                                className={cn(
+                                  "flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground",
+                                  formData.school === school._id && "bg-accent text-accent-foreground"
+                                )}
+                                onClick={() => {
+                                  handleSelectChange('school', school._id);
+                                  setSchoolSearchQuery("");
+                                }}
+                              >
+                                {school.school_name}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               
@@ -591,4 +628,3 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
     </Dialog>
   );
 }
-
