@@ -7,19 +7,20 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { verifyEmail } from "@/utils/client-api"
 import { toast } from "sonner"
-import logo from "@/assets/images/dashboard/common/logo.svg"
 import Image from "next/image"
-import { AlertDialog } from "@/components/ui/alert-dialog"
 import { AlertDialogDemo } from "@/components/auth/alert-dialog-verification"
+import { useUserStore } from "@/utils/store/user-store"
 
 const VerifyEmail = () => {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
   const [emailMissing, setEmailMissing] = useState(false)
-
+  const setUser = useUserStore((state) => state.setUser); // Get the setUser function from the store
+  const setIsProfileCompleted = useUserStore((state) => state.setIsProfileCompleted); 
+  
   useEffect(() => {
     // Extract email from URL query parameters
     const params = new URLSearchParams(window.location.search)
@@ -53,9 +54,21 @@ const VerifyEmail = () => {
     }
 
     try {
-      await verifyEmail(email as string, tempPassword, newPassword, newPasswordConfirm)
-      toast.success("Email verified successfully! Please log in.")
-      router.push("/login")
+      const response = await verifyEmail(email as string, tempPassword, newPassword, newPasswordConfirm)
+      toast.success("Email verified successfully!")
+      // same way as login
+      document.cookie = `token=${response.token}; path=/`; // Store token in cookies
+      setUser(response); // Update the user store with the response data
+      if(!response.full_name){
+        setIsProfileCompleted(false);
+      }
+
+      // check student or not
+      if(response.type == "student"){
+        router.push("/student-verification");
+      }else{
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to verify email")
     } finally {
