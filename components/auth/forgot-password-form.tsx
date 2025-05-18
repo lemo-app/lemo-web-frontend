@@ -6,20 +6,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { toast } from "sonner"
-import { useState } from "react"
-import { EyeIcon, EyeOffIcon } from "lucide-react"
+import { useState, useEffect } from "react"
+import { CheckCheck, EyeIcon, EyeOffIcon, Loader2 } from "lucide-react"
 import { requestForgotPassword, resetPassword } from "@/utils/client-api"
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
+  const searchParams = useSearchParams()
   const [step, setStep] = useState(1)
   const [email, setEmail] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [resetToken, setResetToken] = useState("")
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = searchParams.get('token')
+    if (token) {
+      setResetToken(token)
+      setStep(2)
+    }
+  }, [searchParams])
 
   const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -31,11 +42,20 @@ export function ForgotPasswordForm({
         toast.success("Please provide the new password")
         setStep(2)
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to send reset instructions")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
+        const errorResponse = error.response as { data?: { message?: string } }
+        toast.error(errorResponse.data?.message || "Failed to send reset instructions")
+      } else {
+        toast.error("Failed to send reset instructions")
+      }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleRetry = () => {
+    setStep(1)
   }
 
   const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -45,9 +65,19 @@ export function ForgotPasswordForm({
       const response = await resetPassword(resetToken, newPassword)
       toast.success("Password reset successful!")
       // Redirect to login page after successful reset
-      window.location.href = "/login"
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to reset password")
+       // check student or not 
+       if(response.type == "student"){
+        router.push("/student-verification");
+      }else{
+        router.push("/login");
+      }
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
+        const errorResponse = error.response as { data?: { message?: string } }
+        toast.error(errorResponse.data?.message || "Failed to reset password")
+      } else {
+        toast.error("Failed to reset password")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -114,9 +144,20 @@ export function ForgotPasswordForm({
                 {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
               </button>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Resetting..." : "Confirm Password"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleRetry}
+              >
+                Try Again
+              </Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Resetting..." : "Confirm Password"}
+                {isLoading ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <CheckCheck className="h-4 w-4 ml-2" />}
+              </Button>
+            </div>
           </div>
         </>
       )}
