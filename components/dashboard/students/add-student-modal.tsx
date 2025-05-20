@@ -7,12 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Loader2, Upload, Image as ImageIcon, X, Plus, Trash2 } from "lucide-react"
+import { Loader2, Plus, Trash2 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import  { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserInfo, uploadFile, fetchCurrentUser } from "@/utils/client-api"
+import  { signup, fetchSchools, connectStaffToSchool as connectUserToSchool, updateUserInfo, fetchCurrentUser } from "@/utils/client-api"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
 
 interface AddStudentModalProps {
   isOpen: boolean;
@@ -35,9 +34,6 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
     age: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   
   // Section management state
   const [customSections, setCustomSections] = useState<string[]>([]);
@@ -119,8 +115,6 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
         gender: "",
         age: "",
       });
-      setSelectedImage(null);
-      setImagePreview(null);
       setIsAddingSection(false);
       setSchoolSearchQuery(""); // Reset school search query
     }
@@ -180,45 +174,6 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
     }
   };
 
-  // Handle image selection
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
-        return;
-      }
-      
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
-        return;
-      }
-
-      setSelectedImage(file);
-      
-      // Create a FileReader to read the image and create a preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setImagePreview(event.target.result as string);
-        }
-      };
-      reader.onerror = () => {
-        toast.error("Failed to read the image file");
-        setImagePreview(null);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Remove selected image
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,24 +195,6 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
     }
 
     try {
-      let avatarUrl;
-      
-      // Upload image if selected
-      if (selectedImage) {
-        setIsUploading(true);
-        try {
-          avatarUrl = await uploadFile(selectedImage);
-          console.log('Image uploaded successfully:', avatarUrl);
-          setIsUploading(false);
-        } catch (error: unknown) {
-          // console.error('Error uploading image:', uploadError);
-          toast.error(error instanceof Error ? error.message : "Failed to upload profile image");
-          setIsUploading(false);
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      
       // Create student user using the signup function with type='student'
       const response = await signup(
         formData.email,
@@ -275,7 +212,6 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
           section: formData.section,
           gender: formData.gender,
           age: formData.age,
-          avatar_url: avatarUrl, // Include avatar URL if image was uploaded
         }
         await updateUserInfo(userInfo, response.userId)
           
@@ -361,56 +297,6 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Profile Image Upload */}
-            <div className="flex justify-center mb-2">
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 flex items-center justify-center bg-gray-50">
-                    {imagePreview ? (
-                      <Image
-                        src={imagePreview} 
-                        alt="Profile Preview" 
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                        onError={() => {
-                          toast.error("Failed to load image preview");
-                          setImagePreview(null);
-                        }}
-                        priority
-                      />
-                    ) : (
-                      <ImageIcon className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
-                  
-                  {/* Upload button */}
-                  <label htmlFor="profile-image" className="absolute -bottom-2 -right-2 bg-primary text-white p-1 rounded-full cursor-pointer hover:bg-primary/90">
-                    <Upload className="h-4 w-4" />
-                    <input 
-                      type="file" 
-                      id="profile-image" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                    />
-                  </label>
-                  
-                  {/* Remove button - only show if image is selected */}
-                  {imagePreview && (
-                    <button 
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute -top-2 -right-2 bg-destructive text-white p-1 rounded-full cursor-pointer hover:bg-destructive/90"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                <span className="text-xs text-gray-500 mt-2">Profile Photo</span>
-              </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email *</Label>
@@ -612,11 +498,11 @@ export function AddStudentModal({ isOpen, onClose, onSuccess, userType }: AddStu
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || isSubmitting || isUploading}>
-              {isLoading || isSubmitting || isUploading ? (
+            <Button type="submit" disabled={isLoading || isSubmitting}>
+              {isLoading || isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isUploading ? "Uploading image..." : "Adding..."}
+                  Adding...
                 </>
               ) : (
                 "Add Student"

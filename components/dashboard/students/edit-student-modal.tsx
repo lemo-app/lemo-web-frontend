@@ -4,13 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User as UserIcon, Book, Users, Calendar, X, Save } from 'lucide-react';
-import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const getInitials = (name: string | undefined | null, email: string) => {
+  if (name) {
+    const names = name.trim().split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  // Get initials from email if no name
+  return email.slice(0, 2).toUpperCase();
+};
 
 const EditStudentModal = ({ student, onClose }) => {
-const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     full_name: student.full_name || '',
     email: student.email || '',
@@ -19,33 +31,22 @@ const queryClient = useQueryClient();
     gender: student.gender || '',
     age: student.age || '',
     student_id: student.student_id || '',
-    avatar_url: student.avatar_url || '',
   });
-  const [imagePreview, setImagePreview] = useState(student.avatar_url || null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        console.log(formData, student._id);
       await updateUserInfo(formData, student._id);
       queryClient.invalidateQueries({ queryKey: ['students'] });
       toast.success('Student profile updated successfully!');
       onClose();
     } catch (error) {
       toast.error('Failed to update student profile. Please try again.');
-      // console.error('Error updating student profile:', error);
     }
   };
 
@@ -60,31 +61,16 @@ const queryClient = useQueryClient();
           {/* Profile Picture */}
           <div className="flex justify-center mb-6">
             <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
-                {imagePreview ? (
-                  <Image
-                    src={imagePreview}
-                    alt={formData.full_name || "Student"}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <UserIcon className="h-12 w-12 text-gray-400" />
-                )}
-              </div>
+              <Avatar className="w-24 h-24">
+                <AvatarFallback className="text-xl">
+                  {getInitials(formData.full_name, formData.email)}
+                </AvatarFallback>
+              </Avatar>
             </div>
-            
           </div>
 
           {/* Student Information */}
           <form onSubmit={handleSubmit}>
-          <div className="space-y-1 col-span-2">
-                <Label className="text-xs text-gray-500">Profile Image</Label>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-md">
-                  <Input type="file" onChange={handleImageChange} />
-                </div>
-              </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-xs text-gray-500">Full Name</Label>
@@ -168,7 +154,6 @@ const queryClient = useQueryClient();
                   />
                 </div>
               </div>
-             
             </div>
             <DialogFooter className='mt-4'>
               <Button type="button" onClick={onClose} className="button-outline">

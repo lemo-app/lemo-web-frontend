@@ -26,8 +26,6 @@ import {
   Search,
   Trash2,
   User,
-  InfoIcon,
-  Building,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/dashboard/common/pagination";
@@ -42,7 +40,6 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { User as UserType } from "@/utils/interface/user.types";
 import Image from "next/image";
-import apiClient from "@/utils/client-api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +53,7 @@ import {
 import ViewStudentModal from "@/components/dashboard/students/view-student-modal";
 import EditStudentModal from "@/components/dashboard/students/edit-student-modal";
 import PermissionBanner from "@/components/dashboard/common/permission-banner";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // Define sorting options
 type SortOption =
@@ -66,6 +64,19 @@ type SortOption =
   | "dateAsc"
   | "dateDesc"
   | "none";
+
+// Add this function before the ManageStudents component
+const getInitials = (name: string | undefined | null, email: string) => {
+  if (name) {
+    const names = name.trim().split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  // Get initials from email if no name
+  return email.slice(0, 2).toUpperCase();
+};
 
 export default function ManageStudents() {
   const queryClient = useQueryClient();
@@ -462,19 +473,11 @@ export default function ManageStudents() {
                 <TableRow key={student._id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                        {student.avatar_url ? (
-                          <Image
-                            src={student.avatar_url}
-                            alt={student.full_name || student.email}
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                          />
-                        ) : (
-                          <User className="h-6 w-6 text-gray-400" />
-                        )}
-                      </div>
+                      <Avatar>
+                        <AvatarFallback>
+                          {getInitials(student.full_name, student.email)}
+                        </AvatarFallback>
+                      </Avatar>
                       {student.full_name || "No name provided"}
                     </div>
                   </TableCell>

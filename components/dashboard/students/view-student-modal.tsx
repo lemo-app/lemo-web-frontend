@@ -5,15 +5,26 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { School as SchoolIcon, User as UserIcon, Book, Calendar, Users, Tag, GraduationCap, CheckCircle, XCircle } from "lucide-react"
-import Image from "next/image"
 import { User as UserType } from "@/utils/interface/user.types"
-
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 interface ViewStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: UserType | null;
 }
+
+const getInitials = (name: string | undefined | null, email: string) => {
+  if (name) {
+    const names = name.trim().split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  // Get initials from email if no name
+  return email.slice(0, 2).toUpperCase();
+};
 
 const ViewStudentModal = ({ isOpen, onClose, student }: ViewStudentModalProps) => {
   if (!student) return null;
@@ -56,39 +67,30 @@ const ViewStudentModal = ({ isOpen, onClose, student }: ViewStudentModalProps) =
           {/* Profile Picture */}
           <div className="flex justify-center mb-6">
             <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
-                {student.avatar_url ? (
-                  <Image
-                    src={student.avatar_url}
-                    alt={student.full_name || "Student"}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <UserIcon className="h-12 w-12 text-gray-400" />
-                )}
-              </div>
+              <Avatar className="w-24 h-24">
+                <AvatarFallback className="text-xl">
+                  {getInitials(student.full_name, student.email)}
+                </AvatarFallback>
+              </Avatar>
               <div className="mt-2 text-center">
                 <h3 className="font-medium text-lg">{student.full_name || "No name provided"}</h3>
                 <div className="flex items-center justify-between gap-2">
-                    <Badge variant="outline" className="text-sm text-gray-500">{student.email}</Badge> 
-                    <div className="mt-1">
+                  <Badge variant="outline" className="text-sm text-gray-500">{student.email}</Badge> 
+                  <div className="mt-1">
                     {student.email_verified ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 flex items-center gap-1">
+                      <Badge variant="outline" className="bg-green-50 text-green-700 flex items-center gap-1">
                         <CheckCircle className="h-3.5 w-3.5" />
                         Verified
-                    </Badge>
+                      </Badge>
                     ) : (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 flex items-center gap-1">
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 flex items-center gap-1">
                         <XCircle className="h-3.5 w-3.5" />
                         Pending Verification
-                    </Badge>
+                      </Badge>
                     )}
-                </div>
+                  </div>
                 </div>
               </div>
-              
             </div>
           </div>
 
